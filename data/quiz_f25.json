@@ -1,0 +1,22 @@
+{"paper": "F25-Q", "semester": "Fall 2025", "kind": "quiz", "note": "Current semester. Sections A B C. 20 marks, 20 min each. Pages q-5 (Quiz3 dup) and q-7 (Quiz2 Set-C clean dup) are duplicates.",
+ "papers": [
+  {"id": "F25-Q1C", "quiz": 1, "set": "C", "date": "14 July 2026", "page": "q-2"},
+  {"id": "F25-Q1D", "quiz": 1, "set": "D", "date": "(header cut)", "page": "q-3"},
+  {"id": "F25-Q2C", "quiz": 2, "set": "C", "date": "(header cut)", "page": "q-7", "dup_pages": ["q-4"]},
+  {"id": "F25-Q3D", "quiz": 3, "set": "D", "date": "02 Sept 2026", "page": "q-1", "dup_pages": ["q-5"]},
+  {"id": "F25-Q4C", "quiz": 4, "set": "C", "date": "16 Sept 2026", "page": "q-6"}
+ ],
+ "questions": [
+  {"paper": "F25-Q1C", "q": "1", "marks": 6, "crops": [["q-2", [8, 37, 95, 49]]], "text": "Discuss logarithmic transformations for image enhancement. [6]"},
+  {"paper": "F25-Q1C", "q": "2a", "marks": 11, "crops": [["q-2", [8, 49, 95, 78.5]]], "text": "Medical X-ray image (8-bit) needs enhancement of bone structures in range [120, 200]. Apply gray level slicing for both approaches (with/without background suppression). i) Write the transformation functions [4] ii) Show the mapping for pixel values 100, 150 and 220 [4] iii) Sketch the transformation curves [3]."},
+  {"paper": "F25-Q1C", "q": "2b", "marks": 3, "crops": [["q-2", [8, 78.5, 95, 91]]], "text": "How many different shades of grey are possible in a 10-bit grayscale image? Show their numeric range. Illustrate the expression of intensity resolution of any gray image. [3]"},
+  {"paper": "F25-Q1D", "q": "1", "marks": 6, "crops": [["q-3", [5, 18, 98, 36]]], "text": "How to generate an image Histogram? What does an image Histogram say? [3+3=6]"},
+  {"paper": "F25-Q1D", "q": "2a", "marks": 4, "crops": [["q-3", [5, 36, 98, 59]]], "text": "Explain the four basic types of intensity characteristics of an image and their corresponding histograms. [4]"},
+  {"paper": "F25-Q1D", "q": "2b", "marks": 10, "crops": [["q-3", [5, 59, 98, 92]]], "text": "3-bit 8x8 image, histogram counts {0:2, 1:3, 2:5, 3:6, 4:9, 5:12, 6:14, 7:13}. i) Sketch normalized histogram [2] ii) Compute and sketch the equalized histogram [2+4=6] iii) Sketch the transformation function curve [2]."},
+  {"paper": "F25-Q2C", "q": "1", "marks": 6, "crops": [["q-7", [3, 18, 98, 46]]], "text": "What is the histogram of an image? Two images of size 20x20 with equal numbers of black (0) and white (1) pixels: are their histograms identical? Explain. [2+4=6]"},
+  {"paper": "F25-Q2C", "q": "2", "marks": 14, "crops": [["q-7", [3, 52, 98, 99]]], "text": "4x5, 3-bit image [1,2,4,7,0,2,1,3,1,5,5,2,1,4,1,7,6,3,1,4]. i) Draw histogram [2] ii) Sketch normalized histogram [2] iii) Compute and sketch equalized histogram [2+4=6] iv) Sketch transformation function curve [2] v) Show the equalized output image [2]."},
+  {"paper": "F25-Q3D", "q": "1", "marks": 6, "crops": [["q-1", [12, 44, 90, 62]]], "text": "What are the two principal approaches to image segmentation? Why is a Laplacian filter typically combined with a Gaussian smoothing filter (LOG operator) before performing edge detection in noisy environments? [4+2=6]"},
+  {"paper": "F25-Q3D", "q": "2", "marks": 14, "crops": [["q-1", [12, 62, 90, 84]]], "text": "Boundary grid figure (anticlockwise). Compute the 8-directional chain code that is: i) invariant to the starting point [7] ii) invariant to both the starting point and rotation [7]."},
+  {"paper": "F25-Q4C", "q": "1", "marks": 3, "crops": [["q-6", [8, 43, 97, 59]]], "text": "Define dilation and erosion in binary images. How do they affect object size and shape? [3]"},
+  {"paper": "F25-Q4C", "q": "2", "marks": 7, "crops": [["q-6", [8, 59, 97, 83]]], "text": "Construct a 6x6 binary image A and a 3x3 structuring element B. Using fundamental morphological operations, formulate an edge detection algorithm for A with B, and demonstrate the procedure systematically with mathematical expressions. [7]"}
+ ]}

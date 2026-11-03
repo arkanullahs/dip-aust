@@ -1,0 +1,347 @@
+{
+ "_note": "kind: M = math/apply (CLO2), T = theory short answer (CLO1), C = case study (CLO3). onslide=false -> not in Fall25 slides (dropped by rule). ease 1 easy recipe .. 3 hard.",
+ "HE": {
+  "kind": "M",
+  "name": "Histogram equalization (PDF, CDF, s=round(7*CDF), histograms, curve)",
+  "deck": "05",
+  "slides": "33-40",
+  "ease": 2,
+  "onslide": true
+ },
+ "HS": {
+  "kind": "M",
+  "name": "Histogram specification / matching",
+  "deck": "05",
+  "slides": "46-61",
+  "ease": 3,
+  "onslide": true
+ },
+ "BIT": {
+  "kind": "M",
+  "name": "Bit-plane slicing / rebuild image from planes",
+  "deck": "04",
+  "slides": "54-75",
+  "ease": 1,
+  "onslide": true
+ },
+ "FIL": {
+  "kind": "M",
+  "name": "Spatial filter at a pixel (mean, weighted, median, max/min, Laplacian, Sobel)",
+  "deck": "06,07",
+  "slides": "06:17-47, 07:19-36",
+  "ease": 1,
+  "onslide": true
+ },
+ "CS": {
+  "kind": "M",
+  "name": "Contrast stretching numeric",
+  "deck": "04",
+  "slides": "33-47",
+  "ease": 1,
+  "onslide": true
+ },
+ "GLS": {
+  "kind": "M",
+  "name": "Gray-level (intensity-level) slicing mapping",
+  "deck": "04",
+  "slides": "48-53",
+  "ease": 1,
+  "onslide": true
+ },
+ "GAM": {
+  "kind": "M",
+  "name": "Negative / log / gamma numeric",
+  "deck": "04",
+  "slides": "8-31",
+  "ease": 1,
+  "onslide": true
+ },
+ "HUF": {
+  "kind": "M",
+  "name": "Huffman code + L_avg + entropy + CR + redundancy",
+  "deck": "13",
+  "slides": "24-45",
+  "ease": 2,
+  "onslide": true
+ },
+ "CR": {
+  "kind": "M",
+  "name": "Compression ratio / relative redundancy / entropy numbers",
+  "deck": "13",
+  "slides": "8-16, 39-45",
+  "ease": 1,
+  "onslide": true
+ },
+ "RLE": {
+  "kind": "M",
+  "name": "Run-length encoding",
+  "deck": "13",
+  "slides": "107-118",
+  "ease": 1,
+  "onslide": true
+ },
+ "LZW": {
+  "kind": "M",
+  "name": "LZW encoding table",
+  "deck": "13",
+  "slides": "75-106",
+  "ease": 1,
+  "onslide": true
+ },
+ "ARI": {
+  "kind": "M",
+  "name": "Arithmetic coding",
+  "deck": "13",
+  "slides": "52-74",
+  "ease": 2,
+  "onslide": true
+ },
+ "GOL": {
+  "kind": "M",
+  "name": "Golomb code G_m(n)",
+  "deck": "13",
+  "slides": "46-51",
+  "ease": 1,
+  "onslide": true
+ },
+ "RMS": {
+  "kind": "M",
+  "name": "RMSE fidelity criterion",
+  "deck": "13",
+  "slides": "119-132",
+  "ease": 1,
+  "onslide": true
+ },
+ "CC": {
+  "kind": "M",
+  "name": "Chain code + CFD/NCFD (start & rotation invariant)",
+  "deck": "10",
+  "slides": "10-24",
+  "ease": 2,
+  "onslide": true
+ },
+ "MOR": {
+  "kind": "M",
+  "name": "Dilation / erosion / opening / closing on a grid",
+  "deck": "11",
+  "slides": "14-121",
+  "ease": 2,
+  "onslide": true
+ },
+ "HMT": {
+  "kind": "M",
+  "name": "Hit-or-miss: corners / end points",
+  "deck": "12",
+  "slides": "4-17, 30-32",
+  "ease": 2,
+  "onslide": true
+ },
+ "CAN": {
+  "kind": "M",
+  "name": "Canny numeric (NMS, double threshold, hysteresis)",
+  "deck": "08",
+  "slides": "39-62",
+  "ease": 2,
+  "onslide": true
+ },
+ "DST": {
+  "kind": "M",
+  "name": "Distances D4/D8/De, paths, adjacency, components",
+  "deck": "03",
+  "slides": "5-33",
+  "ease": 2,
+  "onslide": true
+ },
+ "RGN": {
+  "kind": "M",
+  "name": "Region growing / split & merge numeric",
+  "deck": "09",
+  "slides": "8-33",
+  "ease": 3,
+  "onslide": true
+ },
+ "RES": {
+  "kind": "M",
+  "name": "Resolution / bits / levels arithmetic",
+  "deck": "02",
+  "slides": "21-25",
+  "ease": 1,
+  "onslide": true
+ },
+ "HOU": {
+  "kind": "M",
+  "name": "Hough transform",
+  "deck": "-",
+  "slides": "none (deck08 says 10.2.7 excluded)",
+  "ease": 3,
+  "onslide": false
+ },
+ "FFT": {
+  "kind": "M",
+  "name": "Fourier / frequency domain",
+  "deck": "-",
+  "slides": "none",
+  "ease": 3,
+  "onslide": false
+ },
+ "tHIS": {
+  "kind": "T",
+  "name": "Histogram concepts (def, 4 types, identical histograms, reconstruct?)",
+  "deck": "05",
+  "slides": "4-17",
+  "ease": 1,
+  "onslide": true
+ },
+ "tHE": {
+  "kind": "T",
+  "name": "Histogram equalization definition / steps / effect",
+  "deck": "05",
+  "slides": "27-34",
+  "ease": 1,
+  "onslide": true
+ },
+ "tENH": {
+  "kind": "T",
+  "name": "Intensity transforms notes (negative, log, gamma, slicing)",
+  "deck": "04",
+  "slides": "4-53",
+  "ease": 1,
+  "onslide": true
+ },
+ "tPW": {
+  "kind": "T",
+  "name": "Piecewise linear: (r1,s1),(r2,s2) for identity / threshold / stretch",
+  "deck": "04",
+  "slides": "32-36",
+  "ease": 1,
+  "onslide": true
+ },
+ "tSMO": {
+  "kind": "T",
+  "name": "Smoothing, noise, median vs mean",
+  "deck": "06",
+  "slides": "15-47",
+  "ease": 1,
+  "onslide": true
+ },
+ "tSHP": {
+  "kind": "T",
+  "name": "Sharpening: objectives, derivatives, Laplacian derivation & masks",
+  "deck": "07",
+  "slides": "3-30",
+  "ease": 2,
+  "onslide": true
+ },
+ "tCOL": {
+  "kind": "T",
+  "name": "Colour: RGB cube, additive/subtractive, CMY(K), HSI, which model",
+  "deck": "14",
+  "slides": "3-30",
+  "ease": 1,
+  "onslide": true
+ },
+ "tCMP": {
+  "kind": "T",
+  "name": "Compression: why, 3 redundancies, CR & R_D formula",
+  "deck": "13",
+  "slides": "3-23",
+  "ease": 1,
+  "onslide": true
+ },
+ "tSEG": {
+  "kind": "T",
+  "name": "Segmentation: 2 approaches, edges, gradient ops, LoG, Canny steps/criteria/NMS/hysteresis, FP/FN, region growing",
+  "deck": "08,09",
+  "slides": "08:3-62, 09:3-20",
+  "ease": 2,
+  "onslide": true
+ },
+ "tMOR": {
+  "kind": "T",
+  "name": "Morphology: SE, erosion/dilation eq & effects, opening/closing",
+  "deck": "11,12",
+  "slides": "11:3-121",
+  "ease": 1,
+  "onslide": true
+ },
+ "tPIX": {
+  "kind": "T",
+  "name": "Neighbours, adjacency, m-connectivity, distance properties",
+  "deck": "03",
+  "slides": "5-33",
+  "ease": 1,
+  "onslide": true
+ },
+ "tFUN": {
+  "kind": "T",
+  "name": "Fundamentals: sampling, quantization, intensity levels, image types",
+  "deck": "01,02",
+  "slides": "02:12-42",
+  "ease": 1,
+  "onslide": true
+ },
+ "tCC": {
+  "kind": "T",
+  "name": "Chain code definition / problems",
+  "deck": "10",
+  "slides": "10-17",
+  "ease": 1,
+  "onslide": true
+ },
+ "tOTH": {
+  "kind": "T",
+  "name": "Other-teacher theory (eye cross-section, sensor strips, CT, restoration noise)",
+  "deck": "-",
+  "slides": "none",
+  "ease": 3,
+  "onslide": false
+ },
+ "cMOR": {
+  "kind": "C",
+  "name": "Case: which morphological op and why (noise, gaps, coins, boundaries)",
+  "deck": "11,12",
+  "slides": "11:39-121",
+  "ease": 2,
+  "onslide": true
+ },
+ "cENH": {
+  "kind": "C",
+  "name": "Case: enhancement / filtering / segmentation pipeline choice",
+  "deck": "04-09",
+  "slides": "various",
+  "ease": 2,
+  "onslide": true
+ },
+ "cMIX": {
+  "kind": "C",
+  "name": "Case: mixed techniques - applications, advantages, limitations",
+  "deck": "all",
+  "slides": "various",
+  "ease": 3,
+  "onslide": true
+ },
+ "NNI": {
+  "kind": "M",
+  "name": "Zoom: pixel replication / nearest-neighbour interpolation",
+  "deck": "02",
+  "slides": "43-56",
+  "ease": 1,
+  "onslide": true
+ },
+ "THR": {
+  "kind": "M",
+  "name": "Global thresholding (iterative T = (m1+m2)/2)",
+  "deck": "09",
+  "slides": "35-53",
+  "ease": 1,
+  "onslide": true
+ },
+ "HSI": {
+  "kind": "M",
+  "name": "RGB to CMY / HSI conversion numbers",
+  "deck": "14",
+  "slides": "20, 29-30",
+  "ease": 1,
+  "onslide": true
+ }
+}

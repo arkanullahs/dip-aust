@@ -1,0 +1,379 @@
+<meta charset="utf-8"><title>Region Growing Trainer</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@600;700&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;600;700&display=swap">
+<style>
+/* Layout: grid to click on the left, feedback and the exam write-up on the right; one column on phones */
+:root{
+  --bg:#f3f5f9; --surface:#ffffff; --ink:#16213a; --muted:#5a6478; --line:#d5dbe5;
+  --accent:#2346c8; --accent-ink:#ffffff; --in:#cfe0ff; --in-ink:#0e2a8a; --seed:#2346c8; --yes:#0f7d55; --no:#b8430e; --x:#9aa3b3; --miss:#d18a00;
+  --f-display:"Familjen Grotesk","Segoe UI",system-ui,sans-serif;
+  --f-body:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0f1420; --surface:#171e2c; --ink:#e6eaf2; --muted:#98a3b8; --line:#2b3448;
+  --accent:#8ea8ff; --accent-ink:#0f1420; --in:#22356a; --in-ink:#dce6ff; --seed:#8ea8ff; --yes:#4fd1a1; --no:#ff9b62; --x:#5d6880; --miss:#f0b440; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#0f1420; --surface:#171e2c; --ink:#e6eaf2; --muted:#98a3b8; --line:#2b3448;
+  --accent:#8ea8ff; --accent-ink:#0f1420; --in:#22356a; --in-ink:#dce6ff; --seed:#8ea8ff; --yes:#4fd1a1; --no:#ff9b62; --x:#5d6880; --miss:#f0b440; color-scheme:dark }
+body{background:var(--bg);color:var(--ink);font:16.5px/1.6 var(--f-body);margin:0;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 64px}
+.wrap{max-width:1120px;margin:0 auto;display:grid;gap:20px}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;line-height:1.15}
+h1{font-size:clamp(28px,4.5vw,40px)} h2{font-size:21px} h3{font-size:16px}
+p{margin:0;max-width:70ch}
+.eyebrow{font:600 12px var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.lead{color:var(--muted)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px 20px;display:grid;gap:12px;min-width:0}
+.recipe{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.rs{border:1.5px solid var(--line);border-radius:8px;padding:10px 14px;display:grid;gap:4px;align-content:start}
+.rs b.n{font:700 12px var(--f-mono);letter-spacing:.06em;color:var(--accent)}
+.bar{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:end}
+label.f{display:grid;gap:4px;font:600 12px var(--f-mono);letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+select,input[type=number]{font:15px var(--f-body);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:6px 8px;max-width:100%}
+input[type=number]{width:5em;font-family:var(--f-mono)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:7px;overflow:hidden}
+.seg button{border:0;border-radius:0}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+button{font:700 14.5px var(--f-body);color:var(--ink);background:var(--surface);border:1px solid var(--muted);border-radius:7px;padding:8px 14px;cursor:pointer}
+button.main{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+button:focus-visible,select:focus-visible,input:focus-visible,.cell:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.trainer{display:grid;grid-template-columns:minmax(0,auto) minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:860px){.trainer{grid-template-columns:minmax(0,1fr)}}
+.col{display:grid;gap:14px;min-width:0}
+.board{display:grid;gap:3px;width:max-content;max-width:100%}
+.board .lab{font:600 11px var(--f-mono);color:var(--muted);display:grid;place-items:center}
+.cell{width:clamp(38px,11vw,50px);aspect-ratio:1;display:grid;place-items:center;font:700 15px var(--f-mono);color:var(--ink);
+  background:var(--bg);border:1.5px solid var(--line);border-radius:7px;padding:0;position:relative;cursor:pointer}
+.cell.in{background:var(--in);color:var(--in-ink);border-color:var(--accent);border-radius:50%}
+.cell.seed{background:var(--seed);color:var(--accent-ink);border-color:var(--seed);border-radius:50%}
+.cell.out{color:var(--x);background:transparent;text-decoration:line-through;text-decoration-thickness:2px}
+.cell.pick{box-shadow:0 0 0 3px var(--ink)}
+.cell.ok::after,.cell.bad::after,.cell.miss::after{position:absolute;top:-7px;right:-7px;font:700 11px var(--f-mono);width:17px;height:17px;border-radius:50%;display:grid;place-items:center;color:#fff}
+.cell.ok::after{content:"✓";background:var(--yes)}
+.cell.bad{box-shadow:0 0 0 3px var(--no)} .cell.bad::after{content:"✗";background:var(--no)}
+.cell.miss{box-shadow:0 0 0 3px var(--miss)} .cell.miss::after{content:"!";background:var(--miss)}
+.cell.flash{animation:fl .9s ease-out}
+@keyframes fl{0%{box-shadow:0 0 0 6px var(--yes)}100%{box-shadow:0 0 0 0 transparent}}
+@media (prefers-reduced-motion:reduce){.cell.flash{animation:none}}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;color:var(--muted)}
+.legend span{display:inline-flex;gap:6px;align-items:center}
+.dot{width:14px;height:14px;border-radius:50%;display:inline-block;border:1.5px solid var(--accent);background:var(--in)}
+.dot.s{background:var(--seed);border-color:var(--seed)} .dot.x{border-radius:3px;border-color:var(--x);background:transparent;position:relative}
+.dot.x::after{content:"";position:absolute;left:1px;right:1px;top:5px;height:2px;background:var(--x)}
+.info{background:var(--bg);border-radius:8px;padding:8px 12px;font-size:15px;min-height:2.6em}
+.msg{font-size:15.5px;padding:10px 14px;border-radius:8px;border:1.5px solid var(--line)}
+.msg.good{border-color:var(--yes)} .msg.warn{border-color:var(--no)}
+.mono{font-family:var(--f-mono);font-size:.92em}
+table{border-collapse:collapse;font-size:14.5px;width:100%}
+th,td{border-bottom:1px solid var(--line);padding:5px 8px;text-align:left;vertical-align:top}
+th{font:600 12px var(--f-mono);letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+td.y{color:var(--yes);font-weight:700} td.n{color:var(--no);font-weight:700}
+.tw{overflow-x:auto}
+.script{border-left:4px solid #e3a3a3;padding:10px 14px;background:var(--surface);border-radius:0 8px 8px 0;display:grid;gap:8px}
+.mini{display:grid;gap:2px;width:max-content}
+.mini span{width:26px;height:26px;display:grid;place-items:center;font:600 12px var(--f-mono);border:1px solid var(--line)}
+.mini span.on{background:var(--in);color:var(--in-ink);font-weight:700}
+.muted{color:var(--muted)}
+details summary{cursor:pointer;font-weight:700}
+</style>
+
+<div class="wrap">
+<header style="display:grid;gap:8px">
+  <div class="eyebrow">CSE 4227 · deck 09 · region growing</div>
+  <h1>Region growing trainer: spread by eye</h1>
+  <p class="lead">You don't need the queue. Circle the seed, keep circling any pixel that touches a circled one and is close enough, and stop when nothing new joins. The region you get is the same whatever order you go in. The page then turns your circles into the table you write in the exam.</p>
+</header>
+
+<section class="card">
+  <h2>The method</h2>
+  <div class="recipe">
+    <div class="rs"><b class="n">STEP 1</b><span><b>Cross out</b> the obvious outsiders: values far from everything near the seed (the 10s, 15s).</span></div>
+    <div class="rs"><b class="n">STEP 2</b><span><b>Circle the seed.</b></span></div>
+    <div class="rs"><b class="n">STEP 3</b><span><b>Spread:</b> circle a pixel if it <b>touches</b> a circled one (4 or 8 neighbours) and <b>|its value − that neighbour| ≤ T</b>. One passing neighbour is enough.</span></div>
+    <div class="rs"><b class="n">STEP 4</b><span><b>Stop</b> when a full look over the grid circles nothing new. Write the table and the final grid.</span></div>
+  </div>
+</section>
+
+<section class="card">
+  <div class="bar">
+    <label class="f">Question<select id="ex"></select></label>
+    <label class="f">Connectivity<span class="seg" id="conn"><button data-v="4">4</button><button data-v="8">8</button></span></label>
+    <label class="f">T<input type="number" id="T" min="0" max="99"></label>
+    <label class="f">Compare with<span class="seg" id="rule"><button data-v="nb">touching pixel</button><button data-v="seed">seed value</button></span></label>
+    <button id="newr">New random grid</button>
+  </div>
+  <p class="muted" id="qtext" style="font-style:italic"></p>
+</section>
+
+<section class="trainer">
+  <div class="col">
+    <div class="card">
+      <h3>Click a pixel: circle → cross → blank</h3>
+      <div class="board" id="board"></div>
+      <div class="legend"><span><i class="dot s"></i>seed</span><span><i class="dot"></i>circled (in)</span><span><i class="dot x"></i>crossed out</span></div>
+      <div class="info" id="info">Click any pixel to see its circled neighbours and the differences.</div>
+      <div class="bar">
+        <button id="hint">Hint</button>
+        <button id="pass">Spread one pass</button>
+        <button class="main" id="check">Check my circles</button>
+        <button id="show">Show answer</button>
+        <button id="reset">Reset</button>
+      </div>
+    </div>
+  </div>
+  <div class="col">
+    <div class="msg" id="msg">Start with step 1: cross out the obvious outsiders, then spread from the seed.</div>
+    <div class="card" id="passes" hidden><h3>Passes so far</h3><div class="tw" id="passTbl"></div></div>
+    <div class="card" id="writeup" hidden>
+      <h3>Write this in the answer script</h3>
+      <div class="script" id="script"></div>
+    </div>
+  </div>
+</section>
+</div>
+
+<script>
+(() => {
+const EX = {
+  s14_4: { name: "Slide 14 · seed (3,3) · 4-conn · T = 5", img: [[10,10,10,10,10,10,10],[10,10,10,69,70,10,10],[59,10,60,64,59,56,60],[10,59,10,60,70,10,62],[10,60,59,65,67,10,65],[10,10,10,10,10,10,10],[10,10,10,10,10,10,10]], seed: [3,3], conn: 4, T: 5,
+    q: "Slide 14: grow a region from the seed at (3,3) with threshold T = 5 using (a) 4-connectivity." },
+  s14_8: { name: "Slide 14 · seed (3,3) · 8-conn · T = 5", img: null, seed: [3,3], conn: 8, T: 5,
+    q: "Slide 14 (b): the same image and seed, now with 8-connectivity." },
+  f22: { name: "F22 B5(a) · seed (3,3) · 8-conn · T = 4", img: [[15,15,15,15,15,15,15],[15,15,15,68,69,15,15],[64,64,63,67,70,68,15],[15,15,70,65,61,71,66],[15,15,69,73,58,15,15],[15,15,15,15,15,15,15],[15,15,15,15,15,15,15]], seed: [3,3], conn: 8, T: 4,
+    q: "F22 final B5(a): apply region growing on the image from the seed at (3,3), 8-direction, |difference| ≤ 4." },
+  rnd: { name: "Random practice grid", img: null, seed: [3,3], conn: 4, T: 5, q: "Practice: a new grid each time you press “New random grid”." },
+};
+EX.s14_8.img = EX.s14_4.img;
+
+const $ = (s) => document.querySelector(s);
+const S = { ex: "s14_4", img: null, seed: null, conn: 4, T: 5, rule: "nb", mark: [], pick: null, shownPasses: 0 };
+
+const nbrs = (r, c) => {
+  const o = S.conn === 4 ? [[-1,0],[0,-1],[0,1],[1,0]] : [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]];
+  return o.map(([a, b]) => [r + a, c + b]).filter(([a, b]) => a >= 0 && b >= 0 && a < S.img.length && b < S.img[0].length);
+};
+const key = (r, c) => r + "," + c;
+const val = (r, c) => S.img[r][c];
+const ref = (r, c) => `(${r},${c})`;
+const against = (r, c, pr, pc) => S.rule === "seed" ? val(...S.seed) : val(pr, pc);
+
+// waves: pass k adds every pixel touching the region (as it was at the start of the pass) that passes the test
+function solve() {
+  const inR = new Set([key(...S.seed)]), waves = [[{ p: S.seed, from: null }]];
+  for (;;) {
+    const add = [];
+    for (let r = 0; r < S.img.length; r++) for (let c = 0; c < S.img[0].length; c++) {
+      if (inR.has(key(r, c))) continue;
+      const from = nbrs(r, c).find(([a, b]) => inR.has(key(a, b)) && Math.abs(val(r, c) - against(r, c, a, b)) <= S.T);
+      if (from) add.push({ p: [r, c], from });
+    }
+    if (!add.length) break;
+    add.forEach(x => inR.add(key(...x.p)));
+    waves.push(add);
+  }
+  // rejected: touch the region but fail against every touching region pixel
+  const rej = [];
+  for (let r = 0; r < S.img.length; r++) for (let c = 0; c < S.img[0].length; c++) {
+    if (inR.has(key(r, c))) continue;
+    const t = nbrs(r, c).filter(([a, b]) => inR.has(key(a, b)));
+    if (!t.length) continue;
+    const best = t.map(([a, b]) => ({ q: [a, b], d: Math.abs(val(r, c) - against(r, c, a, b)) })).sort((x, y) => x.d - y.d)[0];
+    rej.push({ p: [r, c], ...best });
+  }
+  rej.sort((x, y) => x.d - y.d);
+  return { inR, waves, rej };
+}
+
+function randomGrid() {
+  const n = Math.random() < 0.5 ? 6 : 7, bg = [10, 15, 20][Math.floor(Math.random() * 3)], base = 50 + Math.floor(Math.random() * 30);
+  const T = 3 + Math.floor(Math.random() * 3);
+  const img = Array.from({ length: n }, () => Array.from({ length: n }, () => bg));
+  const seed = [Math.floor(n / 2), Math.floor(n / 2)];
+  img[seed[0]][seed[1]] = base;
+  const blob = [seed], target = 10 + Math.floor(Math.random() * 6);
+  let guard = 0;
+  while (blob.length < target && guard++ < 500) {
+    const [r, c] = blob[Math.floor(Math.random() * blob.length)];
+    const [a, b] = [[r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]][Math.floor(Math.random() * 4)];
+    if (a < 0 || b < 0 || a >= n || b >= n || img[a][b] !== bg) continue;
+    const jump = Math.random() < 0.22 ? T + 1 + Math.floor(Math.random() * 3) : Math.floor(Math.random() * (T + 1));
+    img[a][b] = Math.max(bg + 20, img[r][c] + (Math.random() < 0.5 ? -jump : jump));
+    blob.push([a, b]);
+  }
+  // decoys: similar values that are cut off from the blob
+  for (let k = 0; k < 2; k++) {
+    const r = Math.floor(Math.random() * n), c = Math.floor(Math.random() * n);
+    const near = [[r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1], [r - 1, c - 1], [r - 1, c + 1], [r + 1, c - 1], [r + 1, c + 1]].some(([a, b]) => img[a]?.[b] !== undefined && img[a][b] !== bg);
+    if (img[r][c] === bg && !near) img[r][c] = base + Math.floor(Math.random() * 5) - 2;
+  }
+  return { img, seed, T, conn: Math.random() < 0.5 ? 4 : 8 };
+}
+
+function load(exKey, fresh = true) {
+  S.ex = exKey;
+  const e = EX[exKey];
+  if (exKey === "rnd") {
+    // keep only grids worth practising: a real region and at least one near miss
+    for (let i = 0; i < 60; i++) {
+      const g = randomGrid();
+      Object.assign(S, { img: g.img, seed: g.seed });
+      if (fresh) Object.assign(S, { T: g.T, conn: g.conn, rule: "nb" });
+      const s = solve();
+      if (s.inR.size >= 7 && s.rej.some(x => x.d <= 3 * S.T)) break;
+    }
+  } else {
+    Object.assign(S, { img: e.img, seed: e.seed });
+    if (fresh) Object.assign(S, { T: e.T, conn: e.conn, rule: "nb" });
+  }
+  $("#newr").hidden = exKey !== "rnd";
+  $("#ex").value = exKey;
+  resetMarks();
+}
+
+function resetMarks() {
+  S.mark = S.img.map(row => row.map(() => 0));
+  S.mark[S.seed[0]][S.seed[1]] = 1;
+  S.pick = null; S.shownPasses = 0; S.checked = false;
+  $("#passes").hidden = true; $("#writeup").hidden = true;
+  msg("Start with step 1: cross out the obvious outsiders, then spread from the seed.");
+  $("#info").textContent = "Click any pixel to see its circled neighbours and the differences.";
+  syncControls(); draw();
+}
+
+function syncControls() {
+  $("#T").value = S.T;
+  document.querySelectorAll("#conn button").forEach(b => b.setAttribute("aria-pressed", +b.dataset.v === S.conn));
+  document.querySelectorAll("#rule button").forEach(b => b.setAttribute("aria-pressed", b.dataset.v === S.rule));
+  const e = EX[S.ex];
+  $("#qtext").textContent = S.ex === "rnd"
+    ? `Practice: grow from the seed at ${ref(...S.seed)} = ${val(...S.seed)}, ${S.conn}-connectivity, T = ${S.T}.`
+    : e.q + (S.conn !== e.conn || S.T !== e.T ? ` (You changed it to ${S.conn}-connectivity, T = ${S.T}.)` : "");
+}
+
+function draw(flash = new Set(), verdict = null) {
+  const n = S.img[0].length, b = $("#board");
+  b.style.gridTemplateColumns = `18px repeat(${n}, auto)`;
+  let h = `<span></span>` + S.img[0].map((_, c) => `<span class="lab">${c}</span>`).join("");
+  S.img.forEach((row, r) => {
+    h += `<span class="lab">${r}</span>`;
+    row.forEach((v, c) => {
+      const isSeed = r === S.seed[0] && c === S.seed[1], m = S.mark[r][c];
+      const cls = ["cell", isSeed ? "seed" : m === 1 ? "in" : m === 2 ? "out" : "", S.pick && S.pick[0] === r && S.pick[1] === c ? "pick" : "", flash.has(key(r, c)) ? "flash" : "", verdict ? verdict[key(r, c)] || "" : ""].join(" ");
+      const st = isSeed ? "seed" : m === 1 ? "circled" : m === 2 ? "crossed out" : "blank";
+      h += `<button class="${cls}" data-r="${r}" data-c="${c}" aria-label="pixel ${r},${c} value ${v}, ${st}">${v}</button>`;
+    });
+  });
+  b.innerHTML = h;
+}
+
+const msg = (html, cls = "") => { const m = $("#msg"); m.className = "msg " + cls; m.innerHTML = html; };
+
+function explain(r, c) {
+  const v = val(r, c), circ = nbrs(r, c).filter(([a, b]) => S.mark[a][b] === 1);
+  if (r === S.seed[0] && c === S.seed[1]) return `${ref(r, c)} = ${v} is the <b>seed</b>.`;
+  if (!circ.length) return `${ref(r, c)} = ${v}: no circled pixel touches it yet (${S.conn}-connectivity), so it cannot join <i>yet</i>.`;
+  const parts = circ.map(([a, b]) => {
+    const w = against(r, c, a, b), d = Math.abs(v - w), ok = d <= S.T;
+    return `${S.rule === "seed" ? "seed" : ref(a, b)} = ${w}: |${v} − ${w}| = ${d} <b style="color:var(--${ok ? "yes" : "no"})">${ok ? "≤" : ">"} ${S.T}</b>`;
+  });
+  return `${ref(r, c)} = ${v}, circled neighbours: ${[...new Set(parts)].join(" · ")}`;
+}
+
+$("#board").addEventListener("click", (e) => {
+  const t = e.target.closest(".cell"); if (!t) return;
+  const r = +t.dataset.r, c = +t.dataset.c;
+  if (!(r === S.seed[0] && c === S.seed[1])) S.mark[r][c] = (S.mark[r][c] + 1) % 3;
+  S.pick = [r, c];
+  $("#info").innerHTML = explain(r, c);
+  draw();
+});
+
+$("#hint").onclick = () => {
+  const { inR, rej } = solve();
+  for (let r = 0; r < S.img.length; r++) for (let c = 0; c < S.img[0].length; c++)
+    if (S.mark[r][c] === 1 && !inR.has(key(r, c))) { S.pick = [r, c]; draw(); return msg(`Look again at ${ref(r, c)} = ${val(r, c)}: it is circled but it does not belong. Click it to see why.`, "warn"); }
+  for (let r = 0; r < S.img.length; r++) for (let c = 0; c < S.img[0].length; c++) {
+    if (S.mark[r][c] === 1 || !inR.has(key(r, c))) continue;
+    const from = nbrs(r, c).find(([a, b]) => S.mark[a][b] === 1 && Math.abs(val(r, c) - against(r, c, a, b)) <= S.T);
+    if (from) { S.pick = [r, c]; draw(); $("#info").innerHTML = explain(r, c); return msg(`Next: ${ref(r, c)} = ${val(r, c)} touches circled ${ref(...from)} = ${val(...from)} and |${val(r, c)} − ${against(r, c, ...from)}| = ${Math.abs(val(r, c) - against(r, c, ...from))} ≤ ${S.T}. Circle it.`); }
+  }
+  const missing = [...inR].filter(k => { const [r, c] = k.split(",").map(Number); return S.mark[r][c] !== 1; });
+  if (!missing.length) return msg(`Nothing more can join from your circles. Press <b>Check</b>.${rej.length ? ` The closest miss is ${ref(...rej[0].p)} = ${val(...rej[0].p)} (best difference ${rej[0].d} > ${S.T}).` : ""}`, "good");
+  msg("A pixel you crossed out or left blank is needed to reach the rest. Check your crosses.", "warn");
+};
+
+$("#pass").onclick = () => {
+  const { waves } = solve();
+  if (S.shownPasses >= waves.length - 1) return msg(`No more passes: pass ${waves.length} would add nothing. The region is complete (${[].concat(...waves).length} pixels).`, "good");
+  S.shownPasses++;
+  for (let k = 0; k <= S.shownPasses; k++) waves[k].forEach(({ p }) => { S.mark[p[0]][p[1]] = 1; });
+  const add = waves[S.shownPasses];
+  draw(new Set(add.map(x => key(...x.p))));
+  msg(`Pass ${S.shownPasses}: ${add.length} pixel${add.length > 1 ? "s" : ""} joined (green flash).`);
+  passTable(waves, S.shownPasses);
+};
+
+function passTable(waves, upto) {
+  $("#passes").hidden = false;
+  const rows = [];
+  for (let k = 1; k <= upto; k++) waves[k].forEach(({ p, from }) => {
+    const w = against(...p, ...from);
+    rows.push(`<tr><td>${k}</td><td class="mono">${S.rule === "seed" ? "seed " + val(...S.seed) + " via " + ref(...from) : ref(...from) + " = " + val(...from)}</td><td class="mono">${ref(...p)} = ${val(...p)}</td><td class="mono y">|${val(...p)} − ${w}| = ${Math.abs(val(...p) - w)} ≤ ${S.T}</td></tr>`);
+  });
+  $("#passTbl").innerHTML = `<table><thead><tr><th>pass</th><th>grows from</th><th>joins</th><th>test</th></tr></thead><tbody>${rows.join("")}</tbody></table>`;
+}
+
+function writeup(sol) {
+  const { inR, waves, rej } = sol;
+  $("#writeup").hidden = false;
+  const rows = [];
+  waves.slice(1).forEach(w => w.forEach(({ p, from }) => {
+    const v = against(...p, ...from);
+    rows.push(`<tr><td class="mono">${ref(...from)} = ${val(...from)}</td><td class="mono">${ref(...p)} = ${val(...p)}</td><td class="mono y">|${val(...p)} − ${v}| = ${Math.abs(val(...p) - v)} ≤ ${S.T}</td></tr>`);
+  }));
+  const tricky = rej.filter(x => x.d <= 3 * S.T), obvious = rej.length - tricky.length;
+  const mini = S.img.map((row, r) => row.map((v, c) => `<span class="${inR.has(key(r, c)) ? "on" : ""}">${inR.has(key(r, c)) ? v : ""}</span>`).join("")).join("");
+  $("#script").innerHTML = `
+    <p><b>Rule:</b> start from the seed ${ref(...S.seed)} = ${val(...S.seed)}. A pixel joins if it is ${S.conn}-connected to the region and ${S.rule === "seed" ? `|p − seed| ≤ ${S.T}` : `|p − its region neighbour| ≤ ${S.T}`}. Repeat until no pixel joins.</p>
+    <div class="tw"><table><thead><tr><th>grows from</th><th>joins</th><th>test</th></tr></thead><tbody>${rows.join("")}</tbody></table></div>
+    ${tricky.length ? `<p><b>Rejected</b> (touch the region but fail):</p><ul style="margin:0;padding-left:1.2em">${tricky.map(x => `<li class="mono">${ref(...x.p)} = ${val(...x.p)}: |${val(...x.p)} − ${against(...x.p, ...x.q)}| = ${x.d} &gt; ${S.T}</li>`).join("")}</ul>` : ""}
+    ${obvious ? `<p class="muted">All other neighbours of the region are background (difference far above ${S.T}): ${obvious} pixel${obvious > 1 ? "s" : ""}.</p>` : ""}
+    <p><b>Final region</b> (${inR.size} pixels):</p>
+    <div class="mini" style="grid-template-columns:repeat(${S.img[0].length},26px)">${mini}</div>`;
+}
+
+$("#check").onclick = () => {
+  const sol = solve(), verdict = {};
+  let ok = 0, bad = 0, miss = 0;
+  for (let r = 0; r < S.img.length; r++) for (let c = 0; c < S.img[0].length; c++) {
+    const k = key(r, c), want = sol.inR.has(k), have = S.mark[r][c] === 1;
+    if (want && have) { verdict[k] = "ok"; ok++; } else if (have) { verdict[k] = "bad"; bad++; } else if (want) { verdict[k] = "miss"; miss++; }
+  }
+  draw(new Set(), verdict);
+  if (!bad && !miss) { msg(`<b>All ${ok} correct.</b> Copy the write-up on the right into your answer.`, "good"); writeup(sol); }
+  else msg(`${ok} right · <b style="color:var(--no)">${bad} wrongly circled</b> (✗) · <b style="color:var(--miss)">${miss} missed</b> (!). Click a marked pixel to see the differences.`, "warn");
+};
+
+$("#show").onclick = () => {
+  const sol = solve();
+  S.mark = S.img.map((row, r) => row.map((_, c) => sol.inR.has(key(r, c)) ? 1 : 0));
+  S.shownPasses = sol.waves.length - 1;
+  draw(); passTable(sol.waves, S.shownPasses); writeup(sol);
+  msg(`Answer: ${sol.inR.size} pixels, found in ${sol.waves.length - 1} passes.`, "good");
+};
+
+$("#reset").onclick = resetMarks;
+$("#newr").onclick = () => load("rnd");
+$("#ex").innerHTML = Object.entries(EX).map(([k, e]) => `<option value="${k}">${e.name}</option>`).join("");
+$("#ex").onchange = (e) => load(e.target.value);
+document.querySelectorAll("#conn button").forEach(b => b.onclick = () => { S.conn = +b.dataset.v; resetMarks(); });
+document.querySelectorAll("#rule button").forEach(b => b.onclick = () => { S.rule = b.dataset.v; resetMarks(); });
+$("#T").oninput = (e) => { const v = parseInt(e.target.value, 10); if (v >= 0) { S.T = v; resetMarks(); } };
+
+window.__rg = { S, solve, load };
+load("s14_4");
+})();
+</script>

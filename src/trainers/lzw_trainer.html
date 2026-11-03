@@ -1,0 +1,403 @@
+<meta charset="utf-8"><title>LZW Paper Trainer</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@600;700&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;600;700&display=swap">
+<style>
+/* Layout: one column on phones; on wide screens the image + dictionary sit left of the "thinking" box and the answer-script table */
+:root{
+  --bg:#f3f5f9; --surface:#ffffff; --ink:#16213a; --muted:#5a6478; --line:#d5dbe5; --rule:#e8ecf2;
+  --accent:#2346c8; --accent-ink:#ffffff; --hi:#ffe27a; --hi-ink:#16213a; --yes:#0f7d55; --no:#b8430e; --margin:#e3a3a3;
+  --f-display:"Familjen Grotesk","Segoe UI",system-ui,sans-serif;
+  --f-body:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0f1420; --surface:#171e2c; --ink:#e6eaf2; --muted:#98a3b8; --line:#2b3448; --rule:#1f2738;
+  --accent:#8ea8ff; --accent-ink:#0f1420; --hi:#6a5713; --hi-ink:#fff6d6; --yes:#4fd1a1; --no:#ff9b62; --margin:#7a3a3a; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#0f1420; --surface:#171e2c; --ink:#e6eaf2; --muted:#98a3b8; --line:#2b3448; --rule:#1f2738;
+  --accent:#8ea8ff; --accent-ink:#0f1420; --hi:#6a5713; --hi-ink:#fff6d6; --yes:#4fd1a1; --no:#ff9b62; --margin:#7a3a3a; color-scheme:dark }
+body{background:var(--bg);color:var(--ink);font:16.5px/1.6 var(--f-body);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 64px}
+.wrap{max-width:1120px;margin:0 auto;display:grid;gap:22px}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;line-height:1.15}
+h1{font-size:clamp(28px,4.5vw,40px)}
+h2{font-size:22px}
+h3{font-size:16px;letter-spacing:.02em}
+p{margin:0;max-width:68ch}
+.eyebrow{font:600 12px var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.lead{color:var(--muted)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px 20px;display:grid;gap:12px;min-width:0}
+code,.mono{font-family:var(--f-mono);font-size:.92em}
+
+/* the rule */
+.rule{display:grid;grid-template-columns:1fr;gap:10px}
+.ask{font-weight:700}
+.branches{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px}
+.br{border:1.5px solid var(--line);border-radius:8px;padding:10px 14px;display:grid;gap:4px}
+.br.y{border-color:var(--yes)} .br.n{border-color:var(--no)}
+.br b.tag{font:700 13px var(--f-mono);letter-spacing:.04em}
+.br.y b.tag{color:var(--yes)} .br.n b.tag{color:var(--no)}
+.br ol{margin:0;padding-left:1.2em}
+.setup{font-size:15px;color:var(--muted)}
+
+/* controls */
+.bar{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:end}
+label.f{display:grid;gap:4px;font:600 12px var(--f-mono);letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+select,textarea{font:15px var(--f-body);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:6px 8px;max-width:100%}
+textarea{font-family:var(--f-mono);width:min(360px,100%);min-height:96px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:7px;overflow:hidden}
+.seg button{border:0;border-radius:0}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+button{font:700 14.5px var(--f-body);color:var(--ink);background:var(--surface);border:1px solid var(--muted);border-radius:7px;padding:8px 14px;cursor:pointer}
+button.main{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+button:disabled{opacity:.4;cursor:default}
+button:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.qtext{font-style:italic;color:var(--muted)}
+.err{color:var(--no);font-size:14px}
+
+/* trainer */
+.trainer{display:grid;grid-template-columns:minmax(0,340px) minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:820px){.trainer{grid-template-columns:minmax(0,1fr)}}
+.col{display:grid;gap:14px;min-width:0}
+.img{border-collapse:collapse;font:600 15px var(--f-mono)}
+.img td{width:46px;height:40px;text-align:center;border:1px solid var(--line);position:relative;font-variant-numeric:tabular-nums}
+.img td small{position:absolute;top:1px;left:3px;font:400 9.5px var(--f-mono);color:var(--muted)}
+.img td.crs{background:var(--hi);color:var(--hi-ink)}
+.img td.p{outline:3px solid var(--accent);outline-offset:-3px}
+.img td.done{color:var(--muted)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;color:var(--muted)}
+.sw{display:inline-block;width:12px;height:12px;border-radius:2px;vertical-align:-1px;margin-right:4px}
+.sw.c{background:var(--hi)} .sw.p{border:2.5px solid var(--accent)}
+.stream{display:flex;flex-wrap:wrap;gap:4px}
+.stream span{font:600 13px var(--f-mono);border:1px solid var(--line);border-radius:4px;padding:1px 6px}
+.stream span.crs{background:var(--hi);color:var(--hi-ink);border-color:transparent}
+.stream span.p{outline:2.5px solid var(--accent)}
+.stream span.done{color:var(--muted)}
+.dict{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font:14px var(--f-mono)}
+.dict .loc{color:var(--muted);text-align:right;font-variant-numeric:tabular-nums}
+.dict .on{background:var(--hi);color:var(--hi-ink);border-radius:3px;padding:0 4px}
+.dict .new{color:var(--no);font-weight:700}
+
+.think{border:2px solid var(--accent);border-radius:10px;padding:14px 16px;display:grid;gap:10px;background:var(--surface)}
+.think .q{font-size:18px}
+.chip{font:700 13px var(--f-mono);padding:2px 9px;border-radius:999px;border:1.5px solid currentColor;display:inline-block}
+.chip.y{color:var(--yes)} .chip.n{color:var(--no)}
+.do{margin:0;padding-left:1.3em;display:grid;gap:3px}
+.quiz{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.fb{font-weight:700} .fb.ok{color:var(--yes)} .fb.bad{color:var(--no)}
+.score{font:13px var(--f-mono);color:var(--muted)}
+.prog{font:12.5px var(--f-mono);color:var(--muted)}
+
+/* answer script */
+.script{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px 16px 16px 30px;position:relative;display:grid;gap:12px;min-width:0;
+  background-image:linear-gradient(var(--margin),var(--margin));background-size:1.5px 100%;background-position:16px 0;background-repeat:no-repeat}
+.tw{overflow-x:auto}
+table.paper{border-collapse:collapse;font:14.5px var(--f-mono);min-width:560px;width:100%}
+table.paper th{font:600 11.5px var(--f-body);text-transform:uppercase;letter-spacing:.04em;color:var(--muted);text-align:left;padding:6px 8px;border-bottom:2px solid var(--ink);vertical-align:bottom}
+table.paper td{padding:5px 8px;border-bottom:1px solid var(--rule);font-variant-numeric:tabular-nums}
+table.paper tr.now td{background:var(--hi);color:var(--hi-ink)}
+table.paper td.o{font-weight:700}
+table.paper input{font:14.5px var(--f-mono);color:var(--ink);background:var(--bg);border:1px solid var(--muted);border-radius:4px;padding:4px 6px;width:100%;min-width:56px;box-sizing:border-box}
+table.paper tr.entry td{background:var(--surface);border-bottom:2px solid var(--accent)}
+table.paper td.ok{box-shadow:inset 0 0 0 2px var(--yes)}
+table.paper td.bad{box-shadow:inset 0 0 0 2px var(--no)}
+table.paper .was{display:block;font-size:11.5px;color:var(--no);text-decoration:line-through}
+.sum{display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px 12px;align-items:center;max-width:560px}
+.sum input{font:15px var(--f-mono);color:var(--ink);background:var(--bg);border:1px solid var(--muted);border-radius:5px;padding:5px 8px;width:100%;box-sizing:border-box}
+.sum input.ok{border:2px solid var(--yes)} .sum input.bad{border:2px solid var(--no)}
+.sum .fix{grid-column:2;font-size:13px;color:var(--no)}
+.final{display:grid;gap:6px}
+.final .big{font:700 16px var(--f-mono)}
+.traps{margin:0;padding-left:1.2em;display:grid;gap:6px}
+@media (prefers-reduced-motion:no-preference){ table.paper tr.now td{transition:background .3s} }
+</style>
+
+<div class="wrap">
+<header style="display:grid;gap:8px">
+  <div class="eyebrow">CSE 4227 · Deck 13 · slides 75–106</div>
+  <h1>LZW Paper Trainer</h1>
+  <p class="lead">Press <b>Next</b> and watch the answer-script table fill in one row at a time, exactly as you write it in the exam. Then try <b>Yes / No quiz</b>, and finally <b>Fill the table</b>: you type every cell yourself and the page marks it like an examiner.</p>
+</header>
+
+<section class="card" aria-labelledby="r-h">
+  <h2 id="r-h">The whole method is one question, asked again and again</h2>
+  <p class="setup"><b>Before you start (write this line in the paper):</b> the image is 8-bit, so dictionary locations 0–255 already hold every gray level 0–255. New entries start at <b>256</b>. A 9-bit code gives 512 locations. Read the pixels left to right, top to bottom. The <b>Currently Recognized Sequence (CRS)</b> starts empty.</p>
+  <div class="rule">
+    <p class="ask">Take the CRS, stick the next pixel P on the end. Is “CRS-P” already in the dictionary?</p>
+    <div class="branches">
+      <div class="br y"><b class="tag">YES</b><ol><li>Write nothing in Encoded Output.</li><li>CRS grows: CRS = CRS-P.</li></ol></div>
+      <div class="br n"><b class="tag">NO</b><ol><li>Output the code of CRS (a single pixel's code is the pixel itself).</li><li>Add “CRS-P” at the next free location (256, 257, …).</li><li>CRS restarts as just P.</li></ol></div>
+    </div>
+    <p><b>When the pixels run out:</b> output the code of the last CRS. Done.</p>
+  </div>
+</section>
+
+<section class="card" aria-labelledby="t-h">
+  <h2 id="t-h">Trainer</h2>
+  <div class="bar">
+    <label class="f" for="qsel">Question<select id="qsel"></select></label>
+    <div class="f" style="display:grid;gap:4px"><span class="eyebrow">Mode</span>
+      <div class="seg" role="group" aria-label="Mode"><button id="mWatch" aria-pressed="true">Show me</button><button id="mQuiz" aria-pressed="false">Yes / No quiz</button><button id="mFill" aria-pressed="false">Fill the table</button></div></div>
+  </div>
+  <div id="customBox" hidden style="display:grid;gap:6px">
+    <label class="f" for="custom">Your image: one row per line, gray levels 0–255 separated by spaces<textarea id="custom" spellcheck="false">10 10 20
+10 10 20</textarea></label>
+    <div><button id="useCustom">Use this image</button> <span id="cerr" class="err"></span></div>
+  </div>
+  <p id="qtext" class="qtext"></p>
+
+  <div class="bar">
+    <button id="bRestart">Restart</button>
+    <button id="bBack">◀ Back</button>
+    <button id="bNext" class="main">Next ▶</button>
+    <button id="bPlay">Play</button>
+    <button id="bEnd">Jump to finished answer</button>
+    <span id="prog" class="prog"></span>
+  </div>
+
+  <div class="trainer">
+    <div class="col">
+      <div>
+        <h3>Image</h3>
+        <div class="tw"><table class="img" id="img"></table></div>
+        <div class="legend"><span><i class="sw c"></i>CRS (what you are holding)</span><span><i class="sw p"></i>P (pixel being processed)</span></div>
+      </div>
+      <div><h3>Same pixels in reading order</h3><div class="stream" id="stream"></div></div>
+      <div><h3>New dictionary entries</h3><div class="dict" id="dict"></div></div>
+    </div>
+    <div class="col">
+      <div class="think" id="think" aria-live="polite"></div>
+      <div class="script">
+        <div class="eyebrow">Answer script</div>
+        <div class="tw"><table class="paper"><thead><tr><th>Currently recognized sequence</th><th>Pixel being processed</th><th>Encoded output</th><th>Dictionary location (code word)</th><th>Dictionary entry</th></tr></thead><tbody id="rows"></tbody></table></div>
+        <div class="final" id="final"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="card" aria-labelledby="x-h">
+  <h2 id="x-h">Things that cost marks</h2>
+  <ul class="traps">
+    <li>The first column shows the CRS <b>before</b> P is added. On a YES row it then grows; on a NO row it restarts as P.</li>
+    <li>Only NO rows have an output, a location and an entry. YES rows have just the first two columns.</li>
+    <li>A single pixel (39, 126…) is always in the dictionary, so the very first row is always a YES with an empty CRS.</li>
+    <li>When the CRS is a sequence like 39-39, its code is its <b>location</b> (256), not the pixels.</li>
+    <li>Don't forget the last row: no pixel left, output the code of the final CRS.</li>
+    <li>Compression ratio: original = pixels × 8 bits; encoded = number of outputs × 9 bits. C<sub>R</sub> = original / encoded.</li>
+    <li>LZW removes <b>spatial (inter-pixel) redundancy</b>: repeated pixel patterns become one code. It needs no probabilities and is used in GIF, TIFF and PDF.</li>
+  </ul>
+</section>
+</div>
+
+<script id="core">
+// LZW encoder with the slide 77–95 table (deck 13). Single gray levels 0..start-1 are pre-loaded.
+function lzw(px, start = 256) {
+  const dict = new Map(), steps = [], out = [];
+  const key = s => s.join('-');
+  const has = s => s.length === 1 || dict.has(key(s));
+  const code = s => (s.length === 1 ? s[0] : dict.get(key(s)));
+  let crs = [], from = 0, next = start;
+  px.forEach((p, i) => {
+    const cand = crs.concat(p);
+    if (has(cand)) {
+      steps.push({ i, crs: crs.slice(), from, p, yes: true, cand, found: cand.length > 1 ? code(cand) : null });
+      if (!crs.length) from = i;
+      crs = cand;
+    } else {
+      const c = code(crs);
+      out.push(c);
+      dict.set(key(cand), next);
+      steps.push({ i, crs: crs.slice(), from, p, yes: false, cand, out: c, loc: next, entry: key(cand) });
+      next++; crs = [p]; from = i;
+    }
+  });
+  const c = code(crs);
+  out.push(c);
+  steps.push({ i: px.length, crs: crs.slice(), from, final: true, out: c });
+  return { steps, out };
+}
+</script>
+<script>
+const Q = {
+  slide: { name: 'Slides 77–95 · textbook example', img: [[39, 39, 126, 126], [39, 39, 126, 126], [39, 39, 126, 126], [39, 39, 126, 126]],
+    text: 'Encode the 4×4, 8-bit image with LZW using a 9-bit (512-word) dictionary.' },
+  sp22: { name: 'SP22 Final 1(b) · 3×3', img: [[3, 4, 7], [3, 4, 7], [3, 4, 7]],
+    text: '3×3 8-bit image, lossless LZW fixed length. (i) Generate the codebook using 9 bits, step-by-step LZW encoding [5]. (ii) What kind of redundancy does it reduce? [2] (iii) Any compression achieved? Prove it [2].' },
+  f23: { name: 'F23 Final 3(c) · 4×4', img: [[5, 8, 40, 120], [5, 8, 40, 120], [5, 8, 40, 120], [5, 8, 40, 120]],
+    text: 'Encode the 4×4 8-bit image step by step with LZW fixed-length coding; the codebook uses 9 bits. [10]' },
+  sp25: { name: 'SP25 Final 3(b)(i) · 4×4', img: [[7, 8, 40, 100], [7, 8, 40, 100], [7, 8, 40, 100], [7, 8, 40, 100]],
+    text: 'Choose a lossless fixed-length coding algorithm (LZW) and explain step-by-step encoding of the 4×4 8-bit image. [6]' },
+  custom: { name: 'Your own image', img: [[10, 10, 20], [10, 10, 20]], text: 'Type any small image below and press “Use this image”.' },
+};
+const COLS = ['Currently recognized sequence', 'Pixel being processed', 'Encoded output', 'Dictionary location', 'Dictionary entry'];
+const $ = id => document.getElementById(id);
+let key = 'slide', img, px, W, R, cur, mode = 'watch', answered = false, timer = null, score = { ok: 0, all: 0 }, sum = null;
+const nm = s => (s.length ? s.join('-') : '(empty)');
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+// "39 39", "39,39", "39–39" all read as 39-39; "(empty)", "none", "∅" read as empty
+const norm = v => { const s = String(v ?? '').trim().toLowerCase(); return /^\(?(empty|none|null|nil|ϕ|φ|∅)\)?$/.test(s) ? '' : s.replace(/[\s,;–—_-]+/g, '-').replace(/^-+|-+$/g, ''); };
+const want = s => (s.final ? [s.crs.join('-'), '', String(s.out), '', ''] : [s.crs.join('-'), String(s.p), s.yes ? '' : String(s.out), s.yes ? '' : String(s.loc), s.yes ? '' : s.entry]);
+
+for (const [k, q] of Object.entries(Q)) $('qsel').add(new Option(q.name, k));
+try { const s = localStorage.getItem('lzw-q'); if (s && Q[s]) key = s; } catch (e) {}
+$('qsel').value = key;
+
+function fresh() { R = lzw(px); cur = -1; answered = true; score = { ok: 0, all: 0 }; sum = null; stop(); }
+function load(k) {
+  key = k; img = Q[k].img; W = img[0].length; px = img.flat();
+  $('qtext').textContent = Q[k].text; $('customBox').hidden = k !== 'custom';
+  try { localStorage.setItem('lzw-q', k); } catch (e) {}
+  fresh(); draw();
+}
+
+const head = st => `<p class="q">CRS = <b>${nm(st.crs)}</b>, next pixel P = <b>${st.p}</b>. Is <b>${st.cand.join('-')}</b> in the dictionary?</p>`;
+const body = st => (st.yes
+  ? `<p><span class="chip y">YES</span> ${st.crs.length ? `It is at location <b>${st.found}</b>.` : 'A single pixel is always in the dictionary (0–255).'}</p><ol class="do"><li>Write nothing in Encoded Output.</li><li>CRS grows to <b>${st.cand.join('-')}</b>.</li></ol>`
+  : `<p><span class="chip n">NO</span> It is not in the dictionary yet.</p><ol class="do"><li>Output the code of CRS <b>${nm(st.crs)}</b>: <b>${st.out}</b>${st.crs.length > 1 ? ' (its location)' : ''}.</li><li>Add <b>${st.entry}</b> at location <b>${st.loc}</b>.</li><li>CRS restarts as P: <b>${st.p}</b>.</li></ol>`);
+const fin = st => `<p class="q"><b>No pixels left.</b> CRS = <b>${nm(st.crs)}</b>.</p><ol class="do"><li>Output the code of CRS: <b>${st.out}</b>${st.crs.length > 1 ? ' (its dictionary location)' : ' (a single pixel is its own code)'}.</li><li>Leave the other columns empty. Encoding finished.</li></ol>`;
+
+function think(st) {
+  if (!st) return mode === 'fill'
+    ? `<p class="q"><b>Setup.</b> Dictionary 0–255 = every gray level, new entries start at 256, CRS starts empty. You write every row yourself. Press <b>Next</b> for row 1.</p>`
+    : `<p class="q"><b>Setup.</b> Dictionary 0–255 = every gray level. New entries start at 256. CRS is empty. Press <b>Next</b> to read the first pixel.</p>`;
+  if (mode === 'fill') {
+    if (!answered) return `<p class="q"><b>Row ${cur + 1}.</b> Fill the five columns as you would in the paper, then press <b>Check</b> (or Enter).</p>
+      <ul class="do"><li>Leave a cell empty when nothing goes there. A YES row has only the first two columns.</li><li>Write sequences with dashes or spaces: <code>39-39</code> or <code>39 39</code>.</li><li>The very first CRS is empty.</li></ul>
+      <div class="quiz"><button class="main" id="bCheck">Check</button><button id="bShow">Show answer</button><span class="score">${score.ok}/${score.all} rows fully right</span></div>`;
+    const right = st.marks ? st.marks.filter(Boolean).length : 0;
+    const fb = st.marks ? `<p class="fb ${right === 5 ? 'ok' : 'bad'}">${right === 5 ? 'All 5 cells right.' : `${right} of 5 cells right. Red cells show the correct value.`}</p>` : '<p class="fb bad">Answer shown.</p>';
+    return fb + (st.final ? fin(st) : head(st) + body(st)) + `<p class="score">${score.ok}/${score.all} rows fully right · press Next for the next row</p>`;
+  }
+  if (st.final) return fin(st);
+  if (mode === 'quiz' && !answered) return head(st) + `<div class="quiz"><button class="main" data-ans="y">Yes</button><button data-ans="n">No</button><span class="score">${score.ok}/${score.all} right so far</span></div>`;
+  const fb = mode === 'quiz' ? `<p class="fb ${st.lastOk ? 'ok' : 'bad'}">${st.lastOk ? 'Right.' : 'Not quite.'}</p>` : '';
+  return head(st) + fb + body(st);
+}
+
+function rowHtml(s, now) {
+  const w = want(s);
+  return `<tr class="${now ? 'now' : ''}">` + w.map((v, i) => {
+    const m = s.marks ? (s.marks[i] ? 'ok' : 'bad') : '';
+    const was = s.marks && !s.marks[i] ? `<span class="was">${s.user[i] ? esc(s.user[i]) : '(blank)'}</span>` : '';
+    return `<td class="${i === 2 ? 'o ' : ''}${m}">${was}${v}</td>`;
+  }).join('') + '</tr>';
+}
+const entryRow = () => `<tr class="entry">${COLS.map((c, i) => `<td><input id="f${i}" autocomplete="off" spellcheck="false" aria-label="${c}"></td>`).join('')}</tr>`;
+
+function summaryHtml() {
+  const n = px.length, k = R.out.length;
+  let s = `<div class="big">Encoded output: ${R.out.join(' ')}</div>
+    <div>Original: ${n} pixels × 8 bits = <b>${n * 8} bits</b>. Encoded: ${k} codes × 9 bits = <b>${k * 9} bits</b>.</div>
+    <div>C<sub>R</sub> = ${n * 8} / ${k * 9} = <b>${(n * 8 / (k * 9)).toFixed(4)}</b>${n * 8 > k * 9 ? ' &gt; 1, so compression is achieved.' : ' ≤ 1, so no compression for an image this small.'}</div>
+    ${key === 'sp22' ? '<div><b>(ii)</b> LZW reduces <b>spatial (inter-pixel) redundancy</b>: repeated pixel patterns are sent as one code. <b>(iii)</b> 72 bits before, 54 bits after, so yes.</div>' : ''}`;
+  if (mode === 'quiz') s += `<div class="score">Quiz: ${score.ok}/${score.all} right.</div>`;
+  if (mode === 'fill') s += `<div class="score">Table: ${score.ok}/${score.all} rows fully right.</div>`;
+  return s;
+}
+const SUM = [['Encoded output (all codes in order)', 'e.g. 39 39 126 …'], ['Original size in bits', ''], ['Encoded size in bits', ''], ['Compression ratio C<sub>R</sub>', 'e.g. 1.42 or 128/90']];
+function sumForm() {
+  return `<div class="eyebrow">Finish the answer</div><div class="sum">${SUM.map(([l, ph], i) => `<label for="s${i}">${l}</label><input id="s${i}" placeholder="${ph}" autocomplete="off" spellcheck="false">`).join('')}</div>
+    <div class="quiz"><button class="main" id="bSum">Check</button><button id="bSumShow">Show answer</button></div>`;
+}
+function checkSum(show) {
+  const n = px.length, k = R.out.length, cr = (n * 8) / (k * 9);
+  const vals = [0, 1, 2, 3].map(i => $('s' + i).value.trim());
+  const num = v => { const m = v.replace(/\s/g, '').match(/^([\d.]+)(?:\/([\d.]+))?(?::1)?$/); return m ? (m[2] ? m[1] / m[2] : Number(m[1])) : NaN; };
+  sum = { show, marks: show ? null : [norm(vals[0]) === norm(R.out.join(' ')), num(vals[1]) === n * 8, num(vals[2]) === k * 9, Math.abs(num(vals[3]) - cr) < 0.006], vals };
+  draw();
+}
+
+function draw() {
+  const S = R.steps, st = cur >= 0 ? S[cur] : null, hide = mode !== 'watch' && !answered, shown = hide ? cur - 1 : cur;
+  const reveal = !(mode === 'fill' && hide);
+  const pIdx = st && !st.final ? st.i : -1, crsFrom = st ? st.from : 0, crsLen = st ? st.crs.length : 0;
+  const inCrs = i => i >= crsFrom && i < crsFrom + crsLen;
+  const cls = i => (!reveal ? '' : (i === pIdx ? 'p' : '') + (inCrs(i) ? ' crs' : '') + (st && i < (st.final ? px.length : st.i) && !inCrs(i) ? ' done' : ''));
+  $('img').innerHTML = img.map((row, r) => `<tr>${row.map((v, c) => { const i = r * W + c; return `<td class="${cls(i)}"><small>${i + 1}</small>${v}</td>`; }).join('')}</tr>`).join('');
+  $('stream').innerHTML = px.map((v, i) => `<span class="${cls(i)}">${v}</span>`).join('');
+  const added = S.slice(0, shown + 1).filter(s => s.loc !== undefined);
+  const hit = st && st.yes && st.found && !hide ? st.found : -1;
+  $('dict').innerHTML = `<span class="loc">0–255</span><span>single gray levels</span>` + added.map((s, k) =>
+    `<span class="loc">${s.loc}</span><span class="${s.loc === hit ? 'on' : k === added.length - 1 && s === st ? 'new' : ''}">${s.entry}</span>`).join('');
+  $('rows').innerHTML = S.slice(0, shown + 1).map((s, k) => rowHtml(s, k === cur)).join('') + (mode === 'fill' && hide && st ? entryRow() : '');
+  $('think').innerHTML = think(st);
+  const done = shown === S.length - 1;
+  let f = '';
+  if (done && mode === 'fill' && !(sum && (sum.show || sum.marks))) f = sumForm();
+  else if (done) {
+    f = summaryHtml();
+    if (mode === 'fill' && sum?.marks) f = `<p class="fb ${sum.marks.every(Boolean) ? 'ok' : 'bad'}">Your finish: ${sum.marks.map((m, i) => `${SUM[i][0].replace(/<[^>]+>/g, '')} ${m ? '✓' : `✗ (you wrote “${esc(sum.vals[i]) || 'blank'}”)`}`).join(' · ')}</p>` + f;
+  }
+  $('final').innerHTML = f;
+  $('prog').textContent = cur < 0 ? 'setup' : `${mode === 'fill' ? 'row' : 'step'} ${cur + 1} of ${S.length}`;
+  $('bBack').disabled = cur < 0;
+  $('bNext').disabled = done || hide;
+  $('bEnd').disabled = done;
+  document.querySelectorAll('[data-ans]').forEach(b => b.addEventListener('click', () => answer(b.dataset.ans === 'y')));
+  if ($('bCheck')) { $('bCheck').onclick = () => check(false); $('bShow').onclick = () => check(true); }
+  if ($('bSum')) { $('bSum').onclick = () => checkSum(false); $('bSumShow').onclick = () => checkSum(true); }
+  document.querySelectorAll('#rows input, .sum input').forEach(inp => inp.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); (inp.closest('.sum') ? $('bSum') : $('bCheck')).click(); }
+  }));
+  if (mode === 'fill' && hide && st) $('f0').focus({ preventScroll: true });
+}
+
+function answer(y) {
+  const st = R.steps[cur];
+  st.lastOk = y === st.yes; st.done = true; score.all++; if (st.lastOk) score.ok++;
+  answered = true; draw();
+}
+function check(show) {
+  const st = R.steps[cur], w = want(st);
+  st.user = w.map((_, i) => $('f' + i).value.trim());
+  st.marks = show ? null : w.map((v, i) => norm(st.user[i]) === norm(v));
+  st.done = true; score.all++; if (st.marks && st.marks.every(Boolean)) score.ok++;
+  answered = true; draw();
+  $('bNext').focus({ preventScroll: true });
+}
+function go(t) {
+  cur = Math.max(-1, Math.min(R.steps.length - 1, t));
+  const st = R.steps[cur];
+  answered = mode === 'watch' || cur < 0 || !!st.done || (mode === 'quiz' && st.final);
+  draw();
+}
+function next() {
+  if (mode !== 'watch' && cur >= 0 && !answered) return;
+  if (cur >= R.steps.length - 1) { stop(); return; }
+  go(cur + 1);
+}
+function stop() { if (timer) clearInterval(timer); timer = null; $('bPlay').textContent = 'Play'; }
+$('bNext').onclick = () => { stop(); next(); };
+$('bBack').onclick = () => { stop(); go(cur - 1); };
+$('bRestart').onclick = () => { fresh(); draw(); };
+$('bEnd').onclick = () => { stop(); cur = R.steps.length - 1; answered = true; if (mode === 'fill') sum = { show: true }; draw(); };
+$('bPlay').onclick = () => {
+  if (timer) return stop();
+  if (mode !== 'watch') setMode('watch');
+  timer = setInterval(() => { if (cur >= R.steps.length - 1) stop(); else next(); }, 1100); $('bPlay').textContent = 'Pause';
+};
+function setMode(m) {
+  mode = m;
+  [['mWatch', 'watch'], ['mQuiz', 'quiz'], ['mFill', 'fill']].forEach(([id, v]) => $(id).setAttribute('aria-pressed', m === v));
+  fresh(); draw();
+}
+$('mWatch').onclick = () => setMode('watch');
+$('mQuiz').onclick = () => setMode('quiz');
+$('mFill').onclick = () => setMode('fill');
+$('qsel').onchange = e => load(e.target.value);
+$('useCustom').onclick = () => {
+  const rows = $('custom').value.trim().split(/\n+/).map(l => l.trim().split(/[\s,]+/).filter(Boolean).map(Number));
+  const bad = !rows.length || rows.some(r => r.length !== rows[0].length) || rows.flat().some(v => !Number.isInteger(v) || v < 0 || v > 255);
+  if (bad) { $('cerr').textContent = 'Every row needs the same number of whole numbers between 0 and 255.'; return; }
+  if (rows.flat().length > 60) { $('cerr').textContent = 'Keep it to 60 pixels or fewer so the table stays readable.'; return; }
+  $('cerr').textContent = ''; Q.custom.img = rows; load('custom');
+};
+document.addEventListener('keydown', e => {
+  if (['TEXTAREA', 'SELECT', 'INPUT'].includes(e.target.tagName)) return;
+  if (e.key === 'ArrowRight') { stop(); next(); e.preventDefault(); }
+  if (e.key === 'ArrowLeft') { stop(); go(cur - 1); e.preventDefault(); }
+});
+load(key);
+</script>

@@ -1,0 +1,247 @@
+{
+ "paper": "SP24-F",
+ "semester": "Spring 2024",
+ "kind": "final",
+ "exam_date": "09/04/2025",
+ "format": "Q1 any 4 of 5 x5=20 | Q2 any 2 of 3 x9=18 | Q3 any 4 of 5 x8=32 | total 70",
+ "sections": {
+  "Q1": {
+   "answer": 4,
+   "of": 5,
+   "marks_each": 5
+  },
+  "Q2": {
+   "answer": 2,
+   "of": 3,
+   "marks_each": 9
+  },
+  "Q3": {
+   "answer": 4,
+   "of": 5,
+   "marks_each": 8
+  }
+ },
+ "questions": [
+  {
+   "q": "1a",
+   "sec": "Q1",
+   "marks": 5,
+   "crops": [
+    [
+     "f-07",
+     [
+      10,
+      32,
+      92,
+      38
+     ]
+    ]
+   ],
+   "text": "What are the properties of the Distance Function for Distance Metrics if there are 3 pixels a, b and c? How to calculate the distances City Block, Chess Board, Euclidean between two pixels a and b? [2+3]"
+  },
+  {
+   "q": "1b",
+   "sec": "Q1",
+   "marks": 5,
+   "crops": [
+    [
+     "f-07",
+     [
+      10,
+      38,
+      92,
+      45.5
+     ]
+    ]
+   ],
+   "text": "Define the first-order and second-order discrete derivatives of a 1-D digital image function f(x). What kind of relation can be obtained between first- and second-order derivatives based on edge productions that show a transition like a ramp of constant slope? [3+2]"
+  },
+  {
+   "q": "1c",
+   "sec": "Q1",
+   "marks": 5,
+   "crops": [
+    [
+     "f-07",
+     [
+      10,
+      45.5,
+      92,
+      50
+     ]
+    ]
+   ],
+   "text": "Show the mathematical equation of Erosion and Dilation. Describe the Opening and Closing morphological operations. [1+2+2]"
+  },
+  {
+   "q": "1d",
+   "sec": "Q1",
+   "marks": 5,
+   "crops": [
+    [
+     "f-07",
+     [
+      10,
+      50,
+      92,
+      57.5
+     ]
+    ]
+   ],
+   "text": "Which color model (RGB, CMY, CMYK, HSI) is appropriate or representative for: i) Color Printing ii) Computer Displaying? Explain the reasons. [2+3]"
+  },
+  {
+   "q": "1e",
+   "sec": "Q1",
+   "marks": 5,
+   "crops": [
+    [
+     "f-07",
+     [
+      10,
+      57.5,
+      92,
+      63.5
+     ]
+    ]
+   ],
+   "text": "What is the Hysteresis thresholding of Canny Edge Detection? What are false positive and false negative edge pixels? How is it overcome in the Canny edge detection algorithm? [1+2+2]"
+  },
+  {
+   "q": "2a",
+   "sec": "Q2",
+   "marks": 9,
+   "crops": [
+    [
+     "f-07",
+     [
+      10,
+      64.5,
+      92,
+      82.5
+     ]
+    ]
+   ],
+   "text": "For the 5x5 image [(0 0 1 1 2),(0 1 1 2 4),(1 1 2 4 5),(1 3 4 5 6),(3 3 5 6 7)] find a transformation function that will approximately equalize its histogram: i) illustrate in detail ii) transformed equalized image iii) sketch transformation curve iv) draw equalized histogram [4+1+2+2]"
+  },
+  {
+   "q": "2b",
+   "sec": "Q2",
+   "marks": 9,
+   "crops": [
+    [
+     "f-08",
+     [
+      10,
+      4,
+      92,
+      33.5
+     ]
+    ]
+   ],
+   "text": "7x7 image, 3 bits/pixel, bit planes 2,1,0 given (clean). i) Construct the original image from the bit planes. ii) At (3,3) of the original: Task 1 3x3 Max filter; Task 2 3x3 Positive Laplacian filter; Task 3 design a 3x3 mask averaging the 4 neighbors excluding the point itself. [3+6]"
+  },
+  {
+   "q": "2c",
+   "sec": "Q2",
+   "marks": 9,
+   "crops": [
+    [
+     "f-08",
+     [
+      10,
+      33.5,
+      92,
+      59.5
+     ]
+    ]
+   ],
+   "text": "5x5 image [180 160 160 140 120; 110 110 120 140 120; 110 140 120 120 140; 120 160 160 170 170; 170 120 110 140 110]. i) Table of frequencies per symbol + histogram ii) minimum number of bits per symbol iii) Huffman code for each symbol iv) average number of bits per symbol [1+3+2+3]"
+  },
+  {
+   "q": "3a",
+   "sec": "Q3",
+   "marks": 8,
+   "crops": [
+    [
+     "f-08",
+     [
+      10,
+      63.5,
+      92,
+      73.5
+     ]
+    ]
+   ],
+   "text": "Image corrupted by salt and pepper noise in the object part (not background). i) Provide the best way to denoise this image; explain. ii) Which morphological operation would you prefer to eliminate? Explain your process. [4+4]"
+  },
+  {
+   "q": "3b",
+   "sec": "Q3",
+   "marks": 8,
+   "crops": [
+    [
+     "f-08",
+     [
+      10,
+      73.5,
+      92,
+      85
+     ]
+    ]
+   ],
+   "text": "i) f(x,y)=[1,4,3,2,3,4,2,4,5], 3x3, 3 bits, lossy; after decompression all pixels +2. Provide decompressed image f_d(x,y); use fidelity criteria to evaluate and measure the error. ii) Compute the Golomb code for G4(9). [4+4]"
+  },
+  {
+   "q": "3c",
+   "sec": "Q3",
+   "marks": 8,
+   "crops": [
+    [
+     "f-09",
+     [
+      10,
+      4,
+      92,
+      65.5
+     ]
+    ]
+   ],
+   "text": "Binary image of Greek letter theta (Fig 3.1). What morphological operation(s) would you use to obtain the number zero (0) from theta? Four SEs given (horizontal 1x2, cross, vertical 1x2 variants), use any as many times. Explain choice and show outputs in the grids. [2+2+4]"
+  },
+  {
+   "q": "3d",
+   "sec": "Q3",
+   "marks": 8,
+   "crops": [
+    [
+     "f-09",
+     [
+      10,
+      66,
+      92,
+      88
+     ]
+    ]
+   ],
+   "text": "Chain code for boundary of an object (grid figure, clockwise). Compute the chain code which is invariant to both the starting point and rotation. Show final chain code and illustrate the proof. [4+4]"
+  },
+  {
+   "q": "3e",
+   "sec": "Q3",
+   "marks": 8,
+   "crops": [
+    [
+     "f-sp24p4",
+     [
+      8,
+      15,
+      96,
+      50
+     ]
+    ]
+   ],
+   "text": "4x4 8-bit image [100 105 107 100; 120 125 120 130; 115 117 112 118; 130 140 145 151]. Illustrate the output after contrast stretching to [0-255] using s=T(r); express s=T(r). Then apply thresholding to the stretched image: r>180 -> 255, r<90 -> 0, 90<=r<=180 -> negative transformation. Show final output image. [4+4]"
+  }
+ ]
+}

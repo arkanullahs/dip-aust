@@ -1,0 +1,574 @@
+<meta charset="utf-8"><title>Chain Code Paper Trainer</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@600;700&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;600;700&display=swap">
+<style>
+/* Layout: one column on phones; on wide screens the drawing + compass + question sit left of the answer script */
+:root{
+  --bg:#f3f5f9; --surface:#ffffff; --ink:#16213a; --muted:#5a6478; --line:#d5dbe5; --rule:#e8ecf2;
+  --accent:#2346c8; --accent-ink:#ffffff; --hi:#ffe27a; --hi-ink:#16213a; --yes:#0f7d55; --no:#b8430e; --turn:#0f7d55; --margin:#e3a3a3; --cell:#e9eefb;
+  --f-display:"Familjen Grotesk","Segoe UI",system-ui,sans-serif;
+  --f-body:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0f1420; --surface:#171e2c; --ink:#e6eaf2; --muted:#98a3b8; --line:#2b3448; --rule:#1f2738;
+  --accent:#8ea8ff; --accent-ink:#0f1420; --hi:#6a5713; --hi-ink:#fff6d6; --yes:#4fd1a1; --no:#ff9b62; --turn:#4fd1a1; --margin:#7a3a3a; --cell:#202a40; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#0f1420; --surface:#171e2c; --ink:#e6eaf2; --muted:#98a3b8; --line:#2b3448; --rule:#1f2738;
+  --accent:#8ea8ff; --accent-ink:#0f1420; --hi:#6a5713; --hi-ink:#fff6d6; --yes:#4fd1a1; --no:#ff9b62; --turn:#4fd1a1; --margin:#7a3a3a; --cell:#202a40; color-scheme:dark }
+body{background:var(--bg);color:var(--ink);font:16.5px/1.6 var(--f-body);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 64px}
+.wrap{max-width:1180px;margin:0 auto;display:grid;gap:22px}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;line-height:1.15}
+h1{font-size:clamp(28px,4.5vw,40px)} h2{font-size:22px} h3{font-size:16px;letter-spacing:.02em}
+p{margin:0;max-width:70ch}
+.eyebrow{font:600 12px var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.lead{color:var(--muted)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px 20px;display:grid;gap:12px;min-width:0}
+code,.mono{font-family:var(--f-mono);font-size:.92em}
+.recipe{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px}
+.rs{border:1.5px solid var(--line);border-radius:8px;padding:10px 14px;display:grid;gap:4px;align-content:start}
+.rs b.n{font:700 12px var(--f-mono);letter-spacing:.06em;color:var(--accent)}
+.intro{display:grid;grid-template-columns:auto minmax(0,1fr);gap:18px;align-items:center}
+@media (max-width:640px){.intro{grid-template-columns:minmax(0,1fr)}}
+.bar{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:end}
+label.f{display:grid;gap:4px;font:600 12px var(--f-mono);letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+select,input.t{font:15px var(--f-body);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:6px 8px;max-width:100%}
+input.t{font-family:var(--f-mono);width:min(300px,100%)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:7px;overflow:hidden}
+.seg button{border:0;border-radius:0}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+button{font:700 14.5px var(--f-body);color:var(--ink);background:var(--surface);border:1px solid var(--muted);border-radius:7px;padding:8px 14px;cursor:pointer}
+button.main{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+button:disabled{opacity:.4;cursor:default}
+button:focus-visible,select:focus-visible,input:focus-visible,tr[data-pick]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.qtext{font-style:italic;color:var(--muted)}
+.err{color:var(--no);font-size:14px}
+.prog{font:12.5px var(--f-mono);color:var(--muted)}
+.trainer{display:grid;grid-template-columns:minmax(0,400px) minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:900px){.trainer{grid-template-columns:minmax(0,1fr)}}
+.col{display:grid;gap:14px;min-width:0}
+.figs{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-start}
+figure{margin:0;display:grid;gap:4px;min-width:0}
+figcaption{font-size:12.5px;color:var(--muted)}
+svg{display:block;max-width:100%;height:auto}
+.think{border:2px solid var(--accent);border-radius:10px;padding:14px 16px;display:grid;gap:10px;background:var(--surface)}
+.think .q{font-size:17.5px}
+.do{margin:0;padding-left:1.3em;display:grid;gap:3px}
+.pad{display:flex;flex-wrap:wrap;gap:6px}
+.pad button{font:700 15px var(--f-mono);min-width:64px;padding:8px 10px}
+.fb{font-weight:700} .fb.ok{color:var(--yes)} .fb.bad{color:var(--no)}
+.score{font:13px var(--f-mono);color:var(--muted)}
+.tw{overflow-x:auto}
+.script{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px 16px 18px 32px;display:grid;gap:14px;min-width:0;
+  background-image:linear-gradient(var(--margin),var(--margin));background-size:1.5px 100%;background-position:17px 0;background-repeat:no-repeat}
+.script h3{font-size:15px}
+table.paper{border-collapse:collapse;font:14px var(--f-mono)}
+table.paper th{font:600 11.5px var(--f-body);text-transform:uppercase;letter-spacing:.04em;color:var(--muted);text-align:left;padding:5px 8px;border-bottom:2px solid var(--ink);vertical-align:bottom}
+table.paper td{padding:4px 8px;border-bottom:1px solid var(--rule);font-variant-numeric:tabular-nums;white-space:nowrap}
+table.paper tr.now td{background:var(--hi);color:var(--hi-ink)}
+table.grid{border-collapse:collapse;font:14px var(--f-mono)}
+table.grid td{border:1px solid var(--line);padding:2px 6px;text-align:center;min-width:22px;font-variant-numeric:tabular-nums}
+table.grid td.lab{text-align:right;color:var(--muted);font-size:12px;white-space:nowrap;background:var(--bg)}
+table.grid td.res{font-weight:700}
+table.grid td.z{font-weight:700;text-decoration:underline 2px;text-underline-offset:3px;background:var(--cell)}
+table.grid td.cur{background:var(--hi);color:var(--hi-ink)}
+table.grid td.pair{box-shadow:inset 0 0 0 2px var(--accent)}
+table.grid tr.best td:not(.lab){background:var(--accent);color:var(--accent-ink);font-weight:700}
+table.grid tr.bad td:not(.lab){box-shadow:inset 0 0 0 2px var(--no)}
+table.grid tr.dim td:not(.lab){opacity:.35}
+table.grid tr[data-pick]{cursor:pointer}
+table.grid tr[data-pick]:hover td:not(.lab){background:var(--cell)}
+table.grid td.kd{background:var(--hi);color:var(--hi-ink)}
+.ansline{font:700 15.5px var(--f-mono);border:1.5px solid var(--yes);border-radius:7px;padding:8px 12px;color:var(--ink)}
+.cc{font:700 16px var(--f-mono);letter-spacing:.06em}
+.traps{margin:0;padding-left:1.2em;display:grid;gap:6px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.ctlbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);padding-block:8px;border-bottom:1px solid var(--line)}
+@media (min-width:901px){.col.left{position:sticky;top:calc(env(safe-area-inset-top,0px) + 64px);max-height:calc(100vh - 80px);overflow:auto}}
+.script *{scroll-margin-top:90px}
+table.grid td.moved{background:var(--no);color:var(--surface);font-weight:700}
+table.grid td.from{box-shadow:inset 0 0 0 2px var(--no)}
+table.grid td.kd{background:var(--hi);color:var(--hi-ink)}
+table.grid td.win{background:var(--yes);color:var(--surface);font-weight:700}
+table.grid tr.out td:not(.lab){opacity:.35;text-decoration:line-through}
+mark{background:var(--no);color:var(--surface);border-radius:3px;padding:0 3px}
+.mini code{font-size:15px;letter-spacing:.04em}
+</style>
+
+<div class="wrap">
+<header style="display:grid;gap:8px">
+  <div class="eyebrow">CSE 4227 · Deck 10 · Chain code, CFD, shape number</div>
+  <h1>Chain Code Paper Trainer</h1>
+  <p class="lead">Walk the boundary arrow by arrow, then turn the code into the CFD and the shape number. <b>Show me</b> plays the whole answer one step at a time. <b>Do it yourself</b> makes you pick every direction, count every CFD step and find where the 0s start, and marks each one.</p>
+</header>
+
+<section class="card" aria-labelledby="r-h">
+  <h2 id="r-h">Everything in this chapter is three moves</h2>
+  <div class="intro">
+    <div id="bigCompass"></div>
+    <div class="recipe">
+      <div class="rs"><b class="n">STEP 1 · CHAIN CODE (CC)</b><p>Stand on the start pixel. Look at the next boundary pixel. Write the number of the arrow that points to it. Step there. Repeat until you are back at the start.</p></div>
+      <div class="rs"><b class="n">STEP 2 · CFD</b><p>From each digit to the next, count the <b>anticlockwise</b> steps on the compass. Same arrow = 0. The last digit goes to the <b>first</b>. This kills <b>rotation</b>.</p></div>
+      <div class="rs"><b class="n">STEP 3 · START AT THE 0</b><p>Underline the 0s. Start at the longest run of 0s (the end joins the start), read to the end, wrap round. Two runs the same length? Compare the digits after them. On the CC: start-point invariant. On the CFD: the <b>NCFD = shape number</b>.</p></div>
+    </div>
+  </div>
+  <p class="lead">Arrow numbers go round <b>counterclockwise</b> from 0 = right, like angles: k means k × 45°. Rows count downward, so a smaller row number is “up”.</p>
+</section>
+
+<section class="card" aria-labelledby="t-h">
+  <h2 id="t-h">Trainer</h2>
+  <div class="bar">
+    <label class="f" for="qsel">Question<select id="qsel"></select></label>
+    <label class="f" for="ssel" id="sbox" hidden>Start point<select id="ssel"></select></label>
+    <div style="display:grid;gap:4px"><span class="eyebrow">Mode</span>
+      <div class="seg" role="group" aria-label="Mode"><button id="mWatch" aria-pressed="true">Show me</button><button id="mDo" aria-pressed="false">Do it yourself</button></div></div>
+  </div>
+  <div id="customBox" hidden class="bar">
+    <label class="f" for="custom">Your chain code (digits)<input class="t" id="custom" value="00224466" spellcheck="false" autocomplete="off"></label>
+    <label class="f" for="cn">Directions<select id="cn"><option value="8">8</option><option value="4">4</option></select></label>
+    <button id="useCustom">Use this code</button><span id="cerr" class="err"></span>
+  </div>
+  <p id="qtext" class="qtext"></p>
+  <div class="bar ctlbar">
+    <button id="bRestart">Restart</button>
+    <button id="bBack">◀ Back</button>
+    <button id="bNext" class="main">Next ▶</button>
+    <button id="bSkip">Skip this part ⏭</button>
+    <button id="bPlay">Play</button>
+    <button id="bEnd">Jump to finished answer</button>
+    <span id="prog" class="prog"></span>
+  </div>
+  <div class="trainer">
+    <div class="col left">
+      <div class="figs"><figure><div id="fig"></div><figcaption id="figcap"></figcaption></figure><figure><div id="compass"></div><figcaption id="compcap"></figcaption></figure></div>
+      <div class="think" id="think" aria-live="polite"></div>
+    </div>
+    <div class="script" id="paper"></div>
+  </div>
+</section>
+
+<section class="card" aria-labelledby="x-h">
+  <h2 id="x-h">Things that cost marks</h2>
+  <ul class="traps">
+    <li>Draw the compass in every answer, and say which way you walk (clockwise or anticlockwise, as the question says).</li>
+    <li>The chain is a loop: the last move goes back to the start pixel, and the last CFD digit wraps round to the first code. CC and CFD have the same number of digits.</li>
+    <li>“Invariant to starting point” = smallest shift of the <b>CC</b>. “Invariant to starting point <b>and</b> rotation” = smallest shift of the <b>CFD</b> (NCFD).</li>
+    <li>A run of 0s can wrap: 0 0 3 0 1 2 <b>0 0</b> has the run 0 0 0 0 (places 7 8 1 2), so the NCFD is 00003012, not 00301200.</li>
+    <li>Two runs read the same (506506)? The pattern repeats; either start gives 065065.</li>
+    <li>Slide 23 subtracts the other way round (this − next = counting clockwise). Slide 22, the textbook and the teacher count anticlockwise. Say which you use.</li>
+    <li>“Shape number” is used for both the smallest CC shift (slides 18, 24) and the NCFD (slides 21–22). Name each line you write.</li>
+  </ul>
+</section>
+</div>
+
+<script id="core">
+// Chain code maths (same rules as deck 10 and scripts/solvers.py). Points are (row, col), row 0 at the top.
+const DIRS = { 8: [[0, 1], [-1, 1], [-1, 0], [-1, -1], [0, -1], [1, -1], [1, 0], [1, 1]], 4: [[0, 1], [-1, 0], [0, -1], [1, 0]] };
+function unitPath(path) {
+  const out = [];
+  path.forEach((a, k) => {
+    const b = path[(k + 1) % path.length], dr = Math.sign(b[0] - a[0]), dc = Math.sign(b[1] - a[1]);
+    for (let s = 0; s < Math.max(Math.abs(b[0] - a[0]), Math.abs(b[1] - a[1])); s++) out.push([a[0] + s * dr, a[1] + s * dc]);
+  });
+  return out;
+}
+function chainCode(path, n = 8) {
+  return path.map((a, k) => {
+    const b = path[(k + 1) % path.length], d = DIRS[n].findIndex(([dr, dc]) => dr === b[0] - a[0] && dc === b[1] - a[1]);
+    if (d < 0) throw new Error(`(${a}) -> (${b}) is not a neighbour move`);
+    return d;
+  });
+}
+function pathFromCode(code, n = 8) {
+  const p = [[0, 0]];
+  code.slice(0, -1).forEach(c => { const [r, q] = p[p.length - 1]; p.push([r + DIRS[n][c][0], q + DIRS[n][c][1]]); });
+  const r0 = Math.min(...p.map(x => x[0])), c0 = Math.min(...p.map(x => x[1]));
+  return p.map(([r, c]) => [r - r0, c - c0]);
+}
+const firstDiff = (code, n = 8) => code.map((c, i) => (((code[(i + 1) % code.length] - c) % n) + n) % n);
+const rots = s => s.map((_, k) => s.slice(k).concat(s.slice(0, k)));
+const cmp = (a, b) => { for (let j = 0; j < a.length; j++) if (a[j] !== b[j]) return a[j] - b[j]; return 0; };
+const minIdx = R => R.reduce((b, r, k) => (cmp(r, R[b]) < 0 ? k : b), 0);
+// how a person finds the smallest row: one column at a time, keep only the rows with the smallest digit
+function eliminate(R, cand = R.map((_, k) => k), j0 = 0) {
+  const log = [];
+  for (let j = j0; j < R[0].length && cand.length > 1; j++) {
+    if (cand.every(k => cmp(R[k], R[cand[0]]) === 0)) break; // the rest are identical: the pattern repeats
+    const v = Math.min(...cand.map(k => R[k][j])), keep = cand.filter(k => R[k][j] === v);
+    log.push({ j, v, cand, keep });
+    cand = keep;
+  }
+  return { log, best: cand[0], win: cand, tie: cand.length > 1 };
+}
+// the teacher's trick: start at the smallest digit (0). A longer run of 0s wins (the end joins the start).
+// Runs of the same length: compare the digits after each run.
+function runsOf(s, v) {
+  const m = s.length;
+  if (s.every(x => x === v)) return [{ s: 0, len: m }];
+  const out = [];
+  s.forEach((x, i) => {
+    if (x !== v || s[(i + m - 1) % m] === v) return;
+    let len = 0;
+    while (s[(i + len) % m] === v) len++;
+    out.push({ s: i, len });
+  });
+  return out;
+}
+function zeroStart(s) {
+  const v = Math.min(...s), runs = runsOf(s, v), L = Math.max(...runs.map(r => r.len)), top = runs.filter(r => r.len === L);
+  return { v, runs, L, top, E: eliminate(rots(s), top.map(r => r.s), L) };
+}
+</script>
+<script>
+const ZERO = ['..###..', '..#..#.', '.#....#', '.#...#.', '.#...#.', '.#..#..', '..##...'];
+const U12 = [[0, 2], [0, 3], [0, 4], [1, 5], [2, 6], [3, 5], [4, 5], [5, 4], [6, 3], [6, 2], [5, 1], [4, 1], [3, 1], [2, 1], [1, 2]];
+const SP22xy = [[3, 5], [4, 6], [5, 5], [6, 4], [5, 3], [4, 2], [3, 1], [2, 2], [1, 3], [0, 4], [1, 5], [2, 6]];
+const Q = {
+  slide12: { name: 'Slide 12 · digit 0 (= SP24 figure)', path: U12, grid: ZERO, dir: 'clockwise', start: 'the blue pixel at the top', parts: ['both'],
+    text: 'Write the 8-direction chain code of the boundary, then make it invariant to starting point and rotation.' },
+  slide13: { name: 'Slide 13 · simulation dots', path: [[4, 1], [4, 3], [3, 4], [2, 4], [1, 3], [0, 3], [0, 1], [1, 1], [2, 0], [3, 0]], grid: ['.###.', '.###.', '#####', '#####', '.###.'], dir: 'counterclockwise', start: 'the red dot', parts: ['both'],
+    text: 'Slide 13 simulation: chain code from the red dot, counterclockwise (the slide gives 001232446567).' },
+  slide29: { name: 'Slide 29 · class work', path: [[0, 3], [0, 4], [1, 5], [5, 5], [7, 3], [5, 1], [4, 1], [3, 2], [2, 2], [1, 3]], H: 8, W: 7, dir: 'clockwise', start: 'the top dot (the arrow)', parts: ['start', 'both'],
+    text: 'An image is given as in the figure. Write down the 8-chain code and find the shape number of it.' },
+  f25: { name: 'F25 Quiz Q2 · 7 + 7 marks', path: [[1, 2], [2, 1], [3, 0], [4, 1], [5, 1], [6, 2], [5, 3], [4, 4], [3, 4], [2, 3]], grid: ['.....', '..#..', '.#.#.', '#...#', '.#..#', '.#.#.', '..#..'], dir: 'anticlockwise', start: 'the top pixel (1,2)', parts: ['start', 'both'],
+    text: 'Boundary grid figure (anticlockwise). Compute the 8-directional chain code that is (i) invariant to the starting point [7], (ii) invariant to both the starting point and rotation [7].' },
+  sp24: { name: 'SP24 Final Q3(d) · 4 + 4 marks', path: U12, grid: ZERO, dir: 'clockwise', start: 'the arrow (0,2)', parts: ['both'],
+    text: 'Chain code for the boundary (grid figure, clockwise). Compute the chain code which is invariant to both the starting point and rotation. Show the final chain code and illustrate the proof.' },
+  sp22: { name: 'SP22 Final 6(b)(ii) · 4 marks', path: SP22xy.map(([x, y]) => [6 - y, x]), grid: ['.......', '.......', '.#.....', '.......', '.......', '.......', '.......'], xy: true, dir: 'clockwise', start: 'the arrow pixel (3,5)', parts: ['both'],
+    text: 'Grid of black points (axes x →, y ↑) with an arrow at the reference pixel. Chain code invariant to starting point and rotation, 8-neighbour. (1,4) is inside, so the outer boundary passes through (0,4).' },
+  sp23: { name: 'SP23 Final Q2(c) · 1 + 4 marks', code: [1, 1, 0, 0, 2, 2, 3, 3, 4, 4, 5, 5, 7, 7, 6, 6], dir: 'counterclockwise', start: 'the bottom vertex', parts: ['start'],
+    text: 'What is chain code? For the boundary figure (counterclockwise), compute the chain code that is invariant to the starting point (8-direction).' },
+  f21: { name: 'F21 Final B1(b) · 3 + 3 marks', path: [[8, 3], [7, 4], [6, 5], [6, 6], [6, 7], [5, 7], [4, 8], [4, 9], [4, 10], [3, 10], [2, 9], [1, 8], [0, 7], [0, 6], [0, 5], [0, 4], [1, 3], [2, 3], [3, 2], [4, 1], [5, 1], [6, 1], [7, 2]],
+    grid: ['....####...', '...#....#..', '...#.....#.', '..#.......#', '.#......###', '.#.....#...', '.#...###...', '..#.#......', '...#.......'], dir: 'anticlockwise', start: 'the arrow at the bottom (8,3)', parts: ['both'],
+    text: 'Boundary grid figure (anticlockwise). Find the chain code invariant to both starting point and rotation, 8-neighbour [3].' },
+  slide22: { name: 'Slide 22 · L shape, 4 directions', code: [0, 3, 0, 3, 2, 2, 1, 1], n: 4, dir: 'clockwise', start: 'the circled corner', parts: ['both'],
+    text: '4-direction code (0 right, 1 up, 2 left, 3 down). CC 03032211 → CFD → NCFD; the slide says the shape number is 03033133.' },
+  custom: { name: 'Your own chain code', code: [0, 0, 2, 2, 4, 4, 6, 6], dir: 'along the code', start: 'the first point', parts: ['start', 'both'], text: 'Type any closed chain code below and press “Use this code”.' },
+};
+const NAMES = { 8: ['right', 'up-right', 'up', 'up-left', 'left', 'down-left', 'down', 'down-right'], 4: ['right', 'up', 'left', 'down'] };
+const ARR = { 8: ['→', '↗', '↑', '↖', '←', '↙', '↓', '↘'], 4: ['→', '↑', '←', '↓'] };
+const $ = id => document.getElementById(id);
+let key = 'slide12', q, P, cur = 0, mode = 'watch', timer = null, score = { ok: 0, all: 0 };
+const S = s => s.join('');
+
+function build() {
+  const n = q.n || 8;
+  let path = q.path ? unitPath(q.path) : pathFromCode(q.code, n);
+  let startLabel = q.start;
+  if (q.starts) {
+    const [lb, [r, c]] = q.starts[Number($('ssel').value) || 0], j = path.findIndex(p => p[0] === r && p[1] === c);
+    path = path.slice(j).concat(path.slice(0, j)); startLabel = 'start point ' + lb;
+  }
+  const code = chainCode(path, n), m = code.length, d = firstDiff(code, n);
+  const H = Math.max(q.H || 0, q.grid ? q.grid.length : 0, ...path.map(p => p[0] + 1)), W = Math.max(q.W || 0, q.grid ? q.grid[0].length : 0, ...path.map(p => p[1] + 1));
+  const steps = [], sh = {};
+  const digits = [...Array(n).keys()];
+  const add = (part, ph, g, x = {}) => steps.push({ part, ph, g, choices: digits, ...x });
+  add('cc', 'intro', 'Chain code · setup');
+  code.forEach((c, k) => add('cc', 'cc', `Chain code · move ${k + 1} of ${m}`, { k, ans: c }));
+  add('cc', 'ccdone', 'Chain code · done');
+  const shifts = (t, seq, label) => {
+    const Z = zeroStart(seq), single = Z.runs.length === 1 && Z.L === 1;
+    sh[t] = { R: rots(seq), ...Z, label, single };
+    add(t, 'zv', `${label} · smallest digit`, { t, ans: Z.v });
+    add(t, 'zruns', `${label} · runs of ${Z.v}`, single || Z.L > 9 ? { t } : { t, ans: Z.L, choices: [...Array(Math.min(m, 9)).keys()].map(x => x + 1) });
+    Z.E.log.forEach((e, x) => add(t, 'zcol', `${label} · compare after the runs`, { t, x, ans: e.v }));
+    add(t, 'zans', `${label} · answer`, { t });
+  };
+  if (q.parts.includes('start')) shifts('sn', code, 'CC');
+  if (q.parts.includes('both')) {
+    add('cfd', 'cfdintro', 'CFD · the rule');
+    add('cfd', 'cfdthis', 'CFD · row “this”');
+    add('cfd', 'cfdnext', 'CFD · row “next”');
+    d.forEach((v, i) => add('cfd', 'cfd', `CFD · column ${i + 1} of ${m}`, { i, ans: v }));
+    add('cfd', 'cfddone', 'CFD · done');
+    shifts('nc', d, 'CFD');
+  }
+  add('end', 'end', 'Final answer');
+  P = { n, path, code, m, d, sh, H, W, steps, startLabel };
+}
+const lab = p => (q.xy ? `(${p[1]},${P.H - 1 - p[0]})` : `(${p[0] + (q.off || 0)},${p[1] + (q.off || 0)})`);
+const asks = st => st.ans !== undefined;
+const open = st => mode === 'do' && asks(st) && st.got === undefined; // waiting for the user's answer
+const shown = k => k < cur || (k === cur && !open(P.steps[k]));
+const at = ph => P.steps.findIndex(s => s.ph === ph);
+/* ---------------------------------------------------------------- drawings */
+function arrow(x1, y1, x2, y2, color, wd, cut) {
+  const L = Math.hypot(x2 - x1, y2 - y1), ux = (x2 - x1) / L, uy = (y2 - y1) / L;
+  const ax = x1 + ux * cut, ay = y1 + uy * cut, bx = x2 - ux * cut, by = y2 - uy * cut, h = 4 + wd * 1.6, w = 2 + wd;
+  const pts = [[bx, by], [bx - ux * h - uy * w, by - uy * h + ux * w], [bx - ux * h + uy * w, by - uy * h - ux * w]].map(v => v.map(x => x.toFixed(1)).join(',')).join(' ');
+  return `<line x1="${ax.toFixed(1)}" y1="${ay.toFixed(1)}" x2="${(bx - ux * h * 0.6).toFixed(1)}" y2="${(by - uy * h * 0.6).toFixed(1)}" stroke="${color}" stroke-width="${wd}"/><polygon points="${pts}" fill="${color}"/>`;
+}
+// cnt = {arrow: step number}: the anticlockwise steps counted for one CFD digit
+function compass(n, hi = {}, size = 150, cnt = {}) {
+  const C = 75, R = 44;
+  let o = `<svg viewBox="0 0 150 150" width="${size}" role="img" aria-label="${n}-direction compass">`;
+  for (let k = 0; k < n; k++) {
+    const t = (2 * Math.PI * k) / n, c = hi[k] || 'var(--muted)';
+    o += arrow(C, C, C + R * Math.cos(t), C - R * Math.sin(t), c, hi[k] ? 3.2 : 1.6, 0);
+    o += `<text x="${(C + 60 * Math.cos(t)).toFixed(1)}" y="${(C + 5 - 60 * Math.sin(t)).toFixed(1)}" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="15" font-weight="700" fill="${hi[k] || 'var(--ink)'}">${k}</text>`;
+    if (cnt[k]) {
+      const u = t - Math.PI / n, x = C + 30 * Math.cos(u), y = C - 30 * Math.sin(u);
+      o += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="8" fill="var(--hi)"/><text x="${x.toFixed(1)}" y="${(y + 4).toFixed(1)}" text-anchor="middle" font-size="11" font-weight="700" fill="var(--hi-ink)">${cnt[k]}</text>`;
+    }
+  }
+  return o + `<circle cx="${C}" cy="${C}" r="4.5" fill="var(--ink)"/></svg>`;
+}
+function figure(st) {
+  const { path, code, m, H, W } = P, s = Math.max(20, Math.min(36, Math.floor(360 / Math.max(W, H)))), L = 22, T = 16;
+  const X = p => L + p[1] * s + s / 2, Y = p => T + p[0] * s + s / 2, onPath = new Set(path.map(p => p + ''));
+  let o = `<svg viewBox="0 0 ${L + W * s + 4} ${T + H * s + 4}" width="${L + W * s + 4}" role="img" aria-label="boundary drawing">`;
+  for (let c = 0; c < W; c++) o += `<text x="${L + c * s + s / 2}" y="${T - 4}" text-anchor="middle" font-size="10" fill="var(--muted)">${c + (q.off || 0)}</text>`;
+  for (let r = 0; r < H; r++) o += `<text x="${L - 5}" y="${T + r * s + s / 2 + 3}" text-anchor="end" font-size="10" fill="var(--muted)">${q.xy ? H - 1 - r : r + (q.off || 0)}</text>`;
+  for (let r = 0; r < H; r++) for (let c = 0; c < W; c++) {
+    const g = q.grid && '#1'.includes(q.grid[r]?.[c] ?? '.');
+    o += `<rect x="${L + c * s}" y="${T + r * s}" width="${s}" height="${s}" fill="${onPath.has([r, c] + '') ? 'var(--cell)' : g ? 'var(--line)' : 'none'}" stroke="var(--line)"/>`;
+  }
+  path.forEach(p => (o += `<circle cx="${X(p)}" cy="${Y(p)}" r="${(s * 0.14).toFixed(1)}" fill="var(--ink)"/>`));
+  o += `<circle cx="${X(path[0])}" cy="${Y(path[0])}" r="${(s * 0.4).toFixed(1)}" fill="none" stroke="var(--turn)" stroke-width="2.5"/>`;
+  const ccStep = st.ph === 'cc' ? st.k : st.ph === 'intro' ? -1 : m;
+  path.forEach((a, k) => {
+    const b = path[(k + 1) % m];
+    const isCur = st.ph === 'cc' && k === st.k, isPair = st.ph === 'cfd' && (k === st.i || k === (st.i + 1) % m);
+    if (k > ccStep || (isCur && !shown(cur))) return;
+    const col = isCur ? 'var(--no)' : isPair ? (k === st.i ? 'var(--turn)' : 'var(--no)') : 'var(--accent)';
+    o += arrow(X(a), Y(a), X(b), Y(b), col, isCur || isPair ? 3 : 1.6, s * 0.2);
+    if (!isCur || shown(cur)) {
+      const mx = (X(a) + X(b)) / 2, my = (Y(a) + Y(b)) / 2, dx = X(b) - X(a), dy = Y(b) - Y(a), ln = Math.hypot(dx, dy);
+      o += `<text x="${(mx - (dy / ln) * s * 0.32).toFixed(1)}" y="${(my + (dx / ln) * s * 0.32 + 4).toFixed(1)}" text-anchor="middle" font-size="11" font-weight="700" fill="var(--no)">${code[k]}</text>`;
+    }
+  });
+  if (st.ph === 'cc') { // you are here, and the pixel you are walking to
+    const a = path[st.k], b = path[(st.k + 1) % m];
+    o += `<circle cx="${X(a)}" cy="${Y(a)}" r="${(s * 0.3).toFixed(1)}" fill="none" stroke="var(--accent)" stroke-width="3"/>`;
+    o += `<circle cx="${X(b)}" cy="${Y(b)}" r="${(s * 0.3).toFixed(1)}" fill="none" stroke="var(--no)" stroke-width="3" stroke-dasharray="4 3"/>`;
+  }
+  return o + '</svg>';
+}
+
+/* ---------------------------------------------------------------- the answer script */
+const stepNo = t => ({ cc: 1, sn: 2, cfd: q.parts.includes('start') ? 3 : 2, nc: q.parts.includes('start') ? 4 : 3 })[t];
+const places = r => (r.len > 1 ? 'places ' : 'place ') + Array.from({ length: r.len }, (_, j) => ((r.s + j) % P.m) + 1).join(' ');
+const wrapRead = (s, b) => s.slice(b).join(' ') + (b ? ' | ' + s.slice(0, b).join(' ') : '');
+// "start at the 0": underline the smallest digit, find the longest run of it, compare after the runs if two tie
+function zeroSection(t) {
+  const { m, sh, steps } = P, st = steps[cur];
+  if (!sh[t] || steps.findIndex(s => s.part === t) > cur) return '';
+  const { R, v, runs, L, top, E, label } = sh[t], seq = R[0], here = st.part === t;
+  const done = ph => { const k = steps.findIndex(s => s.t === t && s.ph === ph); return k >= 0 && shown(k); };
+  const title = t === 'sn' ? 'Start-point invariance' : 'NCFD (shape number)';
+  let o = `<h3>Step ${stepNo(t)} · ${title}: start at the ${v}</h3><p>The ${label} is a loop: its end joins its start. Underline every ${v}. Start at the longest run of ${v}s, read to the end, wrap round.</p>`;
+  o += `<div class="tw"><table class="grid"><tr><td class="lab">place</td>${seq.map((_, i) => `<td>${i + 1}</td>`).join('')}</tr>
+    <tr><td class="lab">${label}</td>${seq.map(x => `<td class="${done('zv') && x === v ? 'z' : ''}">${x}</td>`).join('')}</tr></table></div>`;
+  if (done('zruns')) o += `<p>Runs of ${v} (end joins start): ${runs.map(r => (r.len === L ? `<b>${places(r)} = ${r.len} long</b>` : `${places(r)} = ${r.len} long`)).join(' · ')}</p>`;
+  if (top.length > 1 && done('zruns')) {
+    const e = here && st.ph === 'zcol' ? E.log[st.x] : null, rev = shown(cur), fin = done('zans');
+    const rows = top.map(({ s: k }) => {
+      let rc = '';
+      if (e) rc = !e.cand.includes(k) || (rev && !e.keep.includes(k)) ? 'out' : '';
+      if (fin) rc = E.win.includes(k) ? 'best' : 'out';
+      const cells = R[k].map((x, j) => {
+        let c = j < L ? 'z' : '';
+        if (e && j === e.j && e.cand.includes(k)) c = rev && e.keep.includes(k) ? 'win' : 'kd';
+        return `<td class="${c}">${x}</td>`;
+      }).join('');
+      return `<tr class="${rc}"><td class="lab">from place ${k + 1}</td>${cells}</tr>`;
+    }).join('');
+    o += `<p>${top.length} runs are ${L} long. Read from each and compare the digits after the run:</p><div class="tw"><table class="grid">${rows}</table></div>`;
+    if (E.tie && fin) o += `<p>These read exactly the same (the pattern repeats), so either start is fine.</p>`;
+  }
+  if (done('zans')) {
+    const ansline = t === 'sn' ? `Start-point invariant chain code = ${S(R[E.best])}` : `NCFD (shape number), invariant to start point and rotation = ${S(R[E.best])}`;
+    o += `<p>Start at place ${E.best + 1}: <span class="cc">${wrapRead(seq, E.best)}</span></p><div class="ansline">${ansline}</div>`;
+  }
+  return o;
+}
+function cfdSection() {
+  const { n, code, m, d, steps } = P, st = steps[cur], i0 = at('cfdintro');
+  if (i0 < 0 || i0 > cur) return '';
+  const showThis = at('cfdthis') <= cur, showNext = at('cfdnext') <= cur;
+  const lim = st.part !== 'cfd' ? m - 1 : st.ph === 'cfd' ? (shown(cur) ? st.i : st.i - 1) : st.ph === 'cfddone' ? m - 1 : -1;
+  const nx = code.map((_, i) => code[(i + 1) % m]);
+  const col = i => (st.ph === 'cfd' && i === st.i ? 'cur' : '');
+  const row = (label, vals, show, cls) => `<tr><td class="lab">${label}</td>${vals.map((v, i) => `<td class="${cls(i)}">${show(i) ? v : ''}</td>`).join('')}</tr>`;
+  let o = `<h3>Step ${stepNo('cfd')} · Circular first difference (CFD)</h3><p>From each digit to the next, count the <b>anticlockwise</b> steps on the compass. Same arrow = 0. The last digit goes to the first. (This equals (next − this) mod ${n}.)</p><div class="tw"><table class="grid">`;
+  o += row('i', code.map((_, i) => i + 1), () => true, col);
+  o += row('this', code, () => showThis, i => (st.ph === 'cfdthis' ? 'kd' : st.ph === 'cfdnext' && i === 0 ? 'from' : col(i)));
+  o += row('next', nx, () => showNext, i => (st.ph === 'cfdnext' ? (i === m - 1 ? 'moved' : 'kd') : col(i)));
+  o += row('steps ↺ = CFD', d, i => i <= lim, i => `res ${col(i)}`);
+  o += '</table></div>';
+  if (st.part !== 'cfd' || st.ph === 'cfddone') o += `<p class="cc">CFD = ${S(d)}</p>`;
+  return o;
+}
+function paper() {
+  const { n, path, code, m, steps } = P;
+  let o = `<div class="eyebrow">Answer script</div><h3>Step 1 · Chain code (CC)</h3><p>Start at ${P.startLabel}, walk ${q.dir}. ${n}-direction compass: 0 = right, counting counterclockwise.</p>`;
+  const rows = code.map((c, k) => {
+    const idx = steps.findIndex(s => s.ph === 'cc' && s.k === k);
+    if (idx > cur) return '';
+    const a = path[k], b = path[(k + 1) % m], ok = shown(idx);
+    return `<tr class="${idx === cur ? 'now' : ''}"><td>${k + 1}</td><td>${lab(a)} → ${lab(b)}</td><td>${ok ? NAMES[n][c] + ' ' + ARR[n][c] : '?'}</td><td><b>${ok ? c : ''}</b></td></tr>`;
+  }).join('');
+  o += `<div class="tw"><table class="paper"><thead><tr><th>Move</th><th>From → to</th><th>Direction</th><th>Code</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  if (at('ccdone') <= cur) o += `<p class="cc">CC = ${S(code)} &nbsp;(${m} moves)</p>`;
+  o += zeroSection('sn') + cfdSection() + zeroSection('nc');
+  if (steps[cur].ph === 'end' && q.starts) o += `<p>Change “Start point” above and run it again: the CC and CFD rows change (they start at a different corner), but the NCFD stays <b>${S(P.sh.nc.R[P.sh.nc.E.best])}</b>.</p>`;
+  return o;
+}
+
+/* ---------------------------------------------------------------- the question box */
+function think() {
+  const { n, path, code, m, d, sh } = P, st = P.steps[cur], isOpen = open(st);
+  const fb = mode === 'do' && asks(st) && st.got !== undefined ? `<p class="fb ${st.ok ? 'ok' : 'bad'}">${st.ok ? 'Right.' : `Not quite (you chose ${st.got}).`}</p>` : '';
+  const pad = (vals, label) => `<div class="pad">${vals.map(v => `<button data-ans="${v}">${label(v)}</button>`).join('')}</div><p class="score">${score.ok}/${score.all} right so far · or type the digit</p>`;
+  const X = st.t ? sh[st.t] : null;
+  switch (st.ph) {
+    case 'intro': return `<p class="q">Start at <b>${lab(path[0])}</b> (green ring). Walk <b>${q.dir}</b>.</p><p>Each move: find the next boundary pixel, see which way it is, write that arrow's number.</p>`;
+    case 'cc': {
+      const a = path[st.k], b = path[(st.k + 1) % m], dr = b[0] - a[0], dc = b[1] - a[1];
+      const ud = dr < 0 ? 'up' : dr > 0 ? 'down' : '', lr = dc > 0 ? 'right' : dc < 0 ? 'left' : '';
+      const qq = `<p class="q">Move ${st.k + 1}: <b>${lab(a)}</b> → <b>${lab(b)}</b>. Which arrow?</p>`;
+      if (isOpen) return qq + pad([...Array(n).keys()], v => `${v} ${ARR[n][v]}`);
+      return qq + fb + `<p>It goes ${[ud, lr].filter(Boolean).join(' and ')} = <b>${NAMES[n][st.ans]} ${ARR[n][st.ans]}</b>. Write <b>${st.ans}</b>.</p>`;
+    }
+    case 'ccdone': return `<p class="q">Back at the start. <b>CC = ${S(code)}</b> (${m} moves).</p><p>${q.parts.includes('start') ? 'Next: make it independent of the start point.' : 'Next: the CFD.'}</p>`;
+    case 'zv': {
+      const head = st.t === 'sn'
+        ? `<p><b>Start-point invariance.</b> The boundary is a loop, so any digit could come first. Pick the start that makes the smallest number.</p>`
+        : `<p><b>NCFD.</b> The CFD is a loop too. Pick the start that makes the smallest number.</p>`;
+      const qq = head + `<p class="q">${X.label} = <code>${X.R[0].join(' ')}</code>. What is the <b>smallest digit</b>?</p>`;
+      if (isOpen) return qq + pad(st.choices, String);
+      const pl = X.R[0].map((x, i) => (x === X.v ? i + 1 : 0)).filter(Boolean);
+      return qq + fb + `<p>Smallest = <b>${X.v}</b>. Underline every ${X.v}: place${pl.length > 1 ? 's' : ''} ${pl.join(', ')}.</p><p>The answer starts with ${X.v}: a number that starts with the smallest digit is the smallest.</p>`;
+    }
+    case 'zruns': {
+      if (X.single) return `<p class="q">Only one ${X.v}, at place ${X.top[0].s + 1}. <b>Start there.</b></p>`;
+      const qq = `<p class="q">${X.v}s sitting next to each other make one run. The end joins the start. <b>How long is the longest run?</b></p>`;
+      if (isOpen) return qq + pad(st.choices, String);
+      const list = X.runs.map(r => `${places(r)} = <b>${r.len}</b> long${r.s + r.len > m ? ' (wraps from the end to the start)' : ''}`).join('<br>');
+      const verdict = X.top.length === 1 ? `Longest run = ${X.L}, starting at place ${X.top[0].s + 1}. <b>Start there.</b>`
+        : X.E.log.length ? `${X.top.length} runs are ${X.L} long. Compare the digits that come right after each one.`
+        : `${X.top.length} runs are ${X.L} long and they read exactly the same (the pattern repeats). <b>Start at either one.</b>`;
+      return qq + fb + `<p class="mini">${list}</p><p>${verdict}</p>`;
+    }
+    case 'zcol': {
+      const e = X.E.log[st.x], after = e.j - X.L + 1, digits = [...new Set(e.cand.map(k => X.R[k][e.j]))].sort((a, b) => a - b);
+      const qq = `<p class="q">Digit ${after} after the run (column ${e.j + 1}): what is the <b>smallest</b> among the ${e.cand.length} rows still in play?</p>`;
+      if (isOpen) return qq + pad(st.choices, String);
+      const out = e.keep.length === 1 ? `Only the row from place ${e.keep[0] + 1} has ${e.v} here. <b>That one wins.</b>`
+        : e.keep.length === e.cand.length ? `Every row in play has ${e.v} here, so nobody is out. Look at the next digit.`
+        : `${e.keep.length} rows have ${e.v} (from places ${e.keep.map(k => k + 1).join(', ')}). The others are out. Look at the next digit.`;
+      const tie = st.x === X.E.log.length - 1 && X.E.tie ? ' The rows left read exactly the same (the pattern repeats), so either one is the answer.' : '';
+      return qq + fb + `<p>Digits here: ${digits.join(', ')}. Smallest = <b>${e.v}</b>.</p><p>${out}${tie}</p>`;
+    }
+    case 'zans': {
+      const b = X.E.best;
+      return `<p class="q">Start at place ${b + 1}, read to the end${b ? ', then wrap round to place 1' : ''}:</p><p class="mini"><code>${wrapRead(X.R[0], b).replace('|', '<mark>|</mark>')}</code></p>
+        <p class="q">${st.t === 'sn' ? 'Start-point invariant CC' : 'NCFD = shape number'} = <b>${S(X.R[b])}</b></p>${st.t === 'nc' ? '<p>Invariant to the start point and to rotation.</p>' : ''}`;
+    }
+    case 'cfdintro': return `<p class="q"><b>CFD trick:</b> from each digit to the next, count the <b>anticlockwise</b> steps on the compass.</p><ol class="do"><li>Same arrow = 0 steps.</li><li>The last digit goes to the <b>first</b> digit.</li><li>${n === 8 ? 'Example: 0 → 7 is 7 steps; 2 → 0 is 6 steps (2→3→4→5→6→7→0).' : 'Example: 0 → 3 is 3 steps; 2 → 1 is 3 steps (2→3→0→1).'}</li></ol>`;
+    case 'cfdthis': return `<p class="q"><b>Row “this”</b> = copy the CC, digit for digit.</p><p class="mini"><code>${code.join(' ')}</code></p>`;
+    case 'cfdnext': return `<p class="q"><b>Row “next”</b> = the CC moved one place left.</p><p>The first digit (<mark>${code[0]}</mark>) wraps round to the last column, because the loop closes.</p><p class="mini"><code>${code.slice(1).join(' ')} <mark>${code[0]}</mark></code></p>`;
+    case 'cfd': {
+      const a = code[st.i], b = code[(st.i + 1) % m], k = st.ans, walk = Array.from({ length: k + 1 }, (_, s) => (a + s) % n);
+      const last = st.i === m - 1 ? ' (last digit, so “next” is the first digit)' : '';
+      const qq = `<p class="q">Column ${st.i + 1}: from <b>${a}</b> to <b>${b}</b>${last}. Count anticlockwise steps on the compass.</p>`;
+      if (isOpen) return qq + pad(st.choices, String);
+      return qq + fb + `<p>${k === 0 ? 'Same arrow, no move: <b>0</b> steps.' : `${walk.join(' → ')} = <b>${k}</b> step${k > 1 ? 's' : ''}.`} Write <b>${k}</b>.</p>`;
+    }
+    case 'cfddone': return `<p class="q"><b>CFD = ${S(d)}</b></p><p>Rotation adds the same number to every code digit; the subtraction cancels it. So the CFD ignores rotation. Next: remove the start point.</p>`;
+    case 'end': {
+      const lines = [`CC = ${S(code)}`];
+      if (sh.sn) lines.push(`Start-point invariant (smallest shift of CC) = ${S(sh.sn.R[sh.sn.E.best])}`);
+      if (sh.nc) lines.push(`CFD = ${S(d)}`, `NCFD = shape number = ${S(sh.nc.R[sh.nc.E.best])}`);
+      return `<p class="q"><b>Finished.</b> Write these lines:</p><ul class="do">${lines.map(l => `<li><code>${l}</code></li>`).join('')}</ul>${mode === 'do' ? `<p class="score">Score: ${score.ok}/${score.all}</p>` : ''}`;
+    }
+  }
+  return '';
+}
+
+const wide = matchMedia('(min-width: 901px)');
+function draw() {
+  const st = P.steps[cur], n = P.n;
+  $('fig').innerHTML = figure(st);
+  $('figcap').textContent = `green ring = start · ${q.xy ? 'axes x →, y ↑' : `(row, col), row ${q.off || 0} at the top`}`;
+  const hi = {};
+  if (st.ph === 'cc' && shown(cur)) hi[st.ans] = 'var(--no)';
+  const cnt = {};
+  if (st.ph === 'cfd') {
+    const a = P.code[st.i];
+    if (shown(cur)) for (let s = 1; s <= st.ans; s++) { cnt[(a + s) % n] = s; hi[(a + s) % n] = 'var(--accent)'; }
+    hi[a] = 'var(--turn)'; hi[P.code[(st.i + 1) % P.m]] = 'var(--no)';
+  }
+  $('compass').innerHTML = compass(n, hi, 150, cnt);
+  $('compcap').textContent = st.ph === 'cfd' ? 'green = this, orange = next, yellow = steps counted ↺' : `${n}-direction compass`;
+  $('think').innerHTML = think();
+  $('paper').innerHTML = paper();
+  $('prog').textContent = `${st.g} · ${cur + 1}/${P.steps.length}`;
+  $('bBack').disabled = cur === 0;
+  $('bNext').disabled = $('bSkip').disabled = cur === P.steps.length - 1 || open(st);
+  $('bEnd').disabled = cur === P.steps.length - 1;
+  document.querySelectorAll('[data-ans]').forEach(b => (b.onclick = () => answer(Number(b.dataset.ans))));
+  const focus = $('paper').querySelector('td.moved, td.kd, td.win, td.cur, tr.now, tr.best');
+  if (focus && wide.matches) focus.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+}
+function answer(v) {
+  const st = P.steps[cur];
+  if (!open(st)) return;
+  st.got = v; st.ok = v === st.ans;
+  score.all++; if (st.ok) score.ok++;
+  draw();
+}
+function go(t) { cur = Math.max(0, Math.min(P.steps.length - 1, t)); draw(); }
+function stop() { if (timer) clearInterval(timer); timer = null; $('bPlay').textContent = 'Play'; }
+function reset() { stop(); build(); cur = 0; score = { ok: 0, all: 0 }; draw(); }
+function load(k) {
+  key = k; q = Q[k];
+  $('qtext').textContent = q.text; $('customBox').hidden = k !== 'custom';
+  $('sbox').hidden = !q.starts;
+  if (q.starts) $('ssel').innerHTML = q.starts.map((s, i) => `<option value="${i}">${s[0]}</option>`).join('');
+  try { localStorage.setItem('cc-q', k); } catch (e) {}
+  reset();
+}
+function setMode(m) { mode = m; $('mWatch').setAttribute('aria-pressed', m === 'watch'); $('mDo').setAttribute('aria-pressed', m === 'do'); reset(); }
+
+for (const [k, v] of Object.entries(Q)) $('qsel').add(new Option(v.name, k));
+try { const s = localStorage.getItem('cc-q'); if (s && Q[s]) key = s; } catch (e) {}
+$('qsel').value = key;
+$('bigCompass').innerHTML = compass(8, {}, 170);
+$('qsel').onchange = e => load(e.target.value);
+$('ssel').onchange = reset;
+$('mWatch').onclick = () => setMode('watch');
+$('mDo').onclick = () => setMode('do');
+$('bNext').onclick = () => { stop(); if (!open(P.steps[cur])) go(cur + 1); };
+$('bBack').onclick = () => { stop(); go(cur - 1); };
+$('bSkip').onclick = () => { stop(); let t = cur + 1; while (t < P.steps.length - 1 && P.steps[t].part === P.steps[cur].part) t++; go(t); };
+$('bRestart').onclick = reset;
+$('bEnd').onclick = () => { stop(); go(P.steps.length - 1); };
+$('bPlay').onclick = () => {
+  if (timer) return stop();
+  if (mode !== 'watch') setMode('watch');
+  timer = setInterval(() => { if (cur >= P.steps.length - 1) stop(); else go(cur + 1); }, 1000); $('bPlay').textContent = 'Pause';
+};
+$('useCustom').onclick = () => {
+  const n = Number($('cn').value), code = $('custom').value.replace(/[^0-9]/g, '').split('').map(Number);
+  let err = '';
+  if (code.length < 3) err = 'Type at least 3 digits.';
+  else if (code.some(c => c >= n)) err = `A ${n}-direction code only uses digits 0–${n - 1}.`;
+  else if (code.length > 40) err = 'Keep it to 40 digits or fewer.';
+  else { try { if (S(chainCode(pathFromCode(code, n), n)) !== S(code)) err = 'This code does not come back to its start, so it is not a closed boundary.'; } catch (e) { err = 'This code does not come back to its start, so it is not a closed boundary.'; } }
+  $('cerr').textContent = err;
+  if (err) return;
+  Q.custom.code = code; Q.custom.n = n; load('custom');
+};
+document.addEventListener('keydown', e => {
+  if (['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName)) return;
+  const st = P.steps[cur];
+  if (/^[0-9]$/.test(e.key) && open(st) && st.choices.includes(Number(e.key))) { answer(Number(e.key)); return; }
+  if (e.key === 'ArrowRight') { stop(); if (!open(st)) go(cur + 1); e.preventDefault(); }
+  if (e.key === 'ArrowLeft') { stop(); go(cur - 1); e.preventDefault(); }
+});
+load(key);
+</script>
