@@ -104,7 +104,8 @@ def home():
         f'<section class="sec" id="revision"><div class="sechead"><h2>Revision</h2></div><div class="cards">{rev}</div></section>',
         f'<section class="sec" id="trainers"><div class="sechead"><h2>Trainers</h2></div><div class="cards">{tr}</div></section>',
         '''<section class="sec" id="contribute"><div class="sechead"><h2>Fix or add something</h2></div>
-<p>Every page is generated from Python in the <a href="https://github.com/arkanullahs/dip-aust">GitHub repository</a>, and every number on a page is computed there. To fix a mistake or add a lesson, edit the generator in <code>src/</code>, run <code>python build.py</code>, and open a pull request. The site rebuilds itself when a change lands on <code>main</code>. The README explains the layout.</p></section>''',
+<p>Every page is generated from Python in the <a href="https://github.com/arkanullahs/dip-aust">GitHub repository</a>, and every number on a page is computed there. To fix a mistake or add a lesson, edit the generator in <code>src/</code>, run <code>python build.py</code>, and open a pull request. The site rebuilds itself when a change lands on <code>main</code>. The README explains the layout.</p>
+<p class="lic">Content: <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> (share and adapt with credit, non-commercial, same license). Code: MIT. Past-paper question images belong to AUST and are shown for study.</p></section>''',
     ]
     extra = """<style>
 .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,260px),1fr));gap:12px;margin:12px 0}

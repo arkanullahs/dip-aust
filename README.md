@@ -49,6 +49,12 @@ Then open http://localhost:8000. `python build.py --no-generate` re-assembles th
 
 The site is built and deployed by GitHub Actions when a change lands on `main`, so nothing generated is committed.
 
+## License
+
+- **Content** (the lesson text, worked answers, figures and the built pages): [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/), see `LICENSE`. Share and adapt it with credit, not for commercial use, under the same license.
+- **Code** (`build.py`, `src/kit.py`, `src/sim_kit.js`, the generator plumbing and the simulators): MIT, see `LICENSE-CODE`.
+- The past-paper question images in `crops/` are from AUST exam papers and are included for study. They are not covered by either license.
+
 ## Notes
 
 - The course slides themselves are not in this repository; the lessons follow their slide numbers.
